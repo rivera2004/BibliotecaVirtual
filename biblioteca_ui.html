@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca Virtual – UTMachala</title>
+  <meta name="description" content="Sistema de Gestión de Biblioteca Digital – Universidad Técnica de Machala" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0b1120;
+      --bg2: #111827;
+      --bg3: #1a2436;
+      --surface: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #4f8ef7;
+      --accent2: #7c3aed;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --sidebar-w: 260px;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 99px
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden
+    }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 32px
+    }
+
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px
+    }
+
+    .brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      color: var(--text-muted)
+    }
+
+    .nav-section {
+      padding: 12px 12px 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      color: var(--text-muted);
+      text-transform: uppercase
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      margin: 2px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: all .18s;
+      position: relative
+    }
+
+    .nav-item:hover {
+      background: var(--surface);
+      color: var(--text)
+    }
+
+    .nav-item.active {
+      background: rgba(79, 142, 247, .15);
+      color: var(--accent)
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      width: 3px;
+      height: 60%;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0
+    }
+
+    .nav-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border-radius: 7px;
+      font-size: 15px;
+      flex-shrink: 0
+    }
+
+    .nav-item.active .nav-icon {
+      background: rgba(79, 142, 247, .2)
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding: 16px
+    }
+
+    .admin-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface)
+    }
+
+    .admin-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0
+    }
+
+    .admin-info {
+      flex: 1;
+      overflow: hidden
+    }
+
+    .admin-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .admin-role {
+      font-size: 11px;
+      color: var(--text-muted)
+    }
+
+    #topbar {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 32px;
+      background: var(--bg2)
+    }
+
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1
+    }
+
+    .topbar-stats {
+      display: flex;
+      gap: 12px
+    }
+
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      white-space: nowrap
+    }
+
+    .stat-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%
+    }
+
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 40%, rgba(79, 142, 247, .12) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(124, 58, 237, .1) 0%, transparent 60%), var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999
+    }
+
+    .login-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 420px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .5)
+    }
+
+    .login-logo {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 20px
+    }
+
+    .login-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px
+    }
+
+    .login-sub {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 32px
+    }
+
+    .field {
+      margin-bottom: 16px
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79, 142, 247, .15)
+    }
+
+    .field select option {
+      background: var(--bg2)
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      white-space: nowrap
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #3d79e8;
+      box-shadow: 0 4px 16px rgba(79, 142, 247, .4)
+    }
+
+    .btn-success {
+      background: var(--green);
+      color: #fff
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #16a34a;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, .4)
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, .4)
+    }
+
+    .btn-warning {
+      background: var(--amber);
+      color: #000
+    }
+
+    .btn-warning:hover:not(:disabled) {
+      background: #d97706
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text-dim);
+      border: 1px solid var(--border)
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(255, 255, 255, .08);
+      color: var(--text)
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 12px
+    }
+
+    .btn-lg {
+      padding: 13px 28px;
+      font-size: 15px;
+      width: 100%;
+      justify-content: center
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: auto
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden
+    }
+
+    .card:hover {
+      border-color: rgba(79, 142, 247, .3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .3);
+      transform: translateY(-2px)
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .card:hover::before {
+      opacity: 1
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--text-muted)
+    }
+
+    .card-id {
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--accent);
+      margin-top: 2px
+    }
+
+    .card-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor
+    }
+
+    .badge-green {
+      color: var(--green);
+      background: rgba(34, 197, 94, .12)
+    }
+
+    .badge-red {
+      color: var(--red);
+      background: rgba(239, 68, 68, .12)
+    }
+
+    .badge-amber {
+      color: var(--amber);
+      background: rgba(245, 158, 11, .12)
+    }
+
+    .badge-blue {
+      color: var(--accent);
+      background: rgba(79, 142, 247, .12)
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 16px
+    }
+
+    .alert-success {
+      background: rgba(34, 197, 94, .1);
+      border-left: 3px solid var(--green);
+      color: #86efac
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, .1);
+      border-left: 3px solid var(--red);
+      color: #fca5a5
+    }
+
+    .alert-info {
+      background: rgba(79, 142, 247, .1);
+      border-left: 3px solid var(--accent);
+      color: #93c5fd
+    }
+
+    .alert-warning {
+      background: rgba(245, 158, 11, .1);
+      border-left: 3px solid var(--amber);
+      color: #fcd34d
+    }
+
+    .table-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border)
+    }
+
+    tbody td {
+      padding: 12px 16px;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none
+    }
+
+    tbody tr:hover td {
+      background: var(--surface)
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px;
+      width: min(480px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+      transform: translateY(20px);
+      transition: transform .25s
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0)
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .stat-card-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px
+    }
+
+    .stat-card-val {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .stat-card-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .text-muted {
+      color: var(--text-muted);
+      font-size: 13px
+    }
+
+    .mt-4 {
+      margin-top: 16px
+    }
+
+    .mt-6 {
+      margin-top: 24px
+    }
+
+    .ml-auto {
+      margin-left: auto
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn .25s ease forwards
+    }
+
+    #confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 900;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s
+    }
+
+    #confirm-overlay.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    #confirm-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      width: min(380px, 94vw);
+      box-shadow: var(--shadow)
+    }
+
+    #confirm-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px
+    }
+
+    #confirm-box p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 20px
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-card fade-in">
+      <div class="login-logo">&#128218;</div>
+      <h1 class="login-title">Biblioteca Virtual</h1>
+      <p class="login-sub">Universidad Técnica de Machala</p>
+      <div id="login-alert"></div>
+      <div class="field">
+        <label>Usuario</label>
+        <input id="login-user" type="text" placeholder="admin" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input id="login-pass" type="text" placeholder="123" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary btn-lg mt-4" id="btn-login" onclick="handleLogin()">Iniciar Sesión</button>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <nav id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">&#128218;</div>
+        <div>
+          <div class="brand-name">Biblioteca Virtual</div>
+          <div class="brand-sub">UTMachala · Admin</div>
+        </div>
+      </div>
+      <div class="nav-section">Sistema</div>
+      <div class="nav-item active" id="nav-catalogo" onclick="showView('catalogo')">
+        <div class="nav-icon">&#128214;</div> Catálogo
+      </div>
+      <div class="nav-item" id="nav-prestamo" onclick="showView('prestamo')">
+        <div class="nav-icon">&#129309;</div> Registrar Préstamo
+      </div>
+      <div class="nav-item" id="nav-devolucion" onclick="showView('devolucion')">
+        <div class="nav-icon">&#8617;&#65039;</div> Devoluciones
+      </div>
+      <div class="nav-section" style="margin-top:8px">Gestión</div>
+      <div class="nav-item" id="nav-agregar-libro" onclick="showView('agregar-libro')">
+        <div class="nav-icon">&#10133;</div> Agregar Libro
+      </div>
+      <div class="nav-item" id="nav-eliminar-libro" onclick="showView('eliminar-libro')">
+        <div class="nav-icon">&#128465;&#65039;</div> Eliminar Libro
+      </div>
+      <div class="nav-item" id="nav-eliminar-estudiante" onclick="showView('eliminar-estudiante')">
+        <div class="nav-icon">&#128100;</div> Eliminar Estudiante
+      </div>
+      <div class="sidebar-bottom">
+        <div class="admin-card">
+          <div class="admin-avatar">JS</div>
+          <div class="admin-info">
+            <div class="admin-name">Juan Salazar</div>
+            <div class="admin-role">Administrador</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="logout()" title="Cerrar sesión"
+            style="padding:6px 8px">&#128682;</button>
+        </div>
+      </div>
+    </nav>
+
+    <div id="main">
+      <header id="topbar">
+        <div class="topbar-title" id="topbar-title">Catálogo de Libros</div>
+        <div class="topbar-stats">
+          <div class="stat-chip"><span class="stat-dot" style="background:var(--green)"></span><span
+              id="chip-disponibles">0 disponibles</span></div>
+          <div class="stat-chip"><span class="stat-dot" style="background:var(--red)"></span><span id="chip-prestados">0
+              prestados</span></div>
+          <div class="stat-chip"><span class="stat-dot" style="background:var(--accent)"></span><span
+              id="chip-estudiantes">0 estudiantes</span></div>
+        </div>
+      </header>
+      <div id="content">
+
+        <div id="view-catalogo" class="fade-in">
+          <div class="section-header">
+            <h2 class="section-title">&#128214; Catálogo de Libros</h2>
+            <span class="section-sub" id="catalogo-count"></span>
+          </div>
+          <div class="stats-row" id="catalogo-stats"></div>
+          <div class="grid grid-3" id="catalogo-grid"></div>
+        </div>
+
+        <div id="view-prestamo" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#129309; Registrar Préstamo</h2>
+          </div>
+          <div id="prestamo-alert"></div>
+          <div class="card" style="max-width:540px">
+            <div class="field">
+              <label>Estudiante</label>
+              <select id="prestamo-estudiante">
+                <option value="">— Seleccione un estudiante —</option>
+              </select>
+            </div>
+            <div id="prestamo-info-estudiante"></div>
+            <div class="field mt-4">
+              <label>Libro disponible</label>
+              <select id="prestamo-libro">
+                <option value="">— Seleccione un libro —</option>
+              </select>
+            </div>
+            <hr class="divider" />
+            <div class="flex-row">
+              <button class="btn btn-success" onclick="confirmarPrestamo()">&#9989; Confirmar Préstamo</button>
+              <button class="btn btn-ghost" onclick="openModal('modal-nuevo-estudiante')">&#10133; Nuevo
+                Estudiante</button>
+            </div>
+          </div>
+          <div class="mt-6">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Préstamos Activos</h3>
+            <div id="prestamos-activos-list"></div>
+          </div>
+        </div>
+
+        <div id="view-devolucion" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#8617;&#65039; Registrar Devolución</h2>
+          </div>
+          <div id="devolucion-alert"></div>
+          <div id="devolucion-empty" class="hidden text-muted">No hay préstamos activos.</div>
+          <div class="grid grid-2" id="devolucion-list"></div>
+        </div>
+
+        <div id="view-agregar-libro" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#10133; Agregar Nuevo Libro</h2>
+          </div>
+          <div class="card" style="max-width:480px">
+            <div id="agregar-libro-alert"></div>
+            <div class="field"><label>Título</label><input id="al-titulo" type="text" placeholder="Título del libro" />
+            </div>
+            <div class="field"><label>Categoría</label><input id="al-categoria" type="text"
+                placeholder="Ej: Novela, Técnico, Clásico..." /></div>
+            <div class="field"><label>Género</label><input id="al-genero" type="text"
+                placeholder="Ej: Realismo mágico, Programación..." /></div>
+            <div class="flex-row mt-4">
+              <button class="btn btn-success" onclick="agregarLibro()">&#128190; Guardar Libro</button>
+              <button class="btn btn-ghost" onclick="limpiarFormLibro()">&#128260; Limpiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-eliminar-libro" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#128465;&#65039; Eliminar Libro</h2>
+          </div>
+          <div id="eliminar-libro-alert"></div>
+          <div id="eliminar-libro-empty" class="hidden text-muted">No hay libros disponibles para eliminar.</div>
+          <div class="grid grid-3" id="eliminar-libro-grid"></div>
+        </div>
+
+        <div id="view-eliminar-estudiante" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#128100; Eliminar Estudiante</h2>
+          </div>
+          <div id="eliminar-est-alert"></div>
+          <div id="eliminar-est-empty" class="hidden text-muted">No hay estudiantes registrados.</div>
+          <div class="grid grid-2" id="eliminar-est-grid"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVO ESTUDIANTE -->
+  <div id="modal-nuevo-estudiante" class="modal-overlay">
+    <div class="modal">
+      <h2 class="modal-title">Registrar Estudiante</h2>
+      <p class="modal-sub">Complete los datos del nuevo estudiante.</p>
+      <div id="modal-est-alert"></div>
+      <div class="field"><label>Nombre completo</label><input id="ne-nombre" type="text"
+          placeholder="Ej: Ana Lucía Pérez" /></div>
+      <div class="field"><label>Correo electrónico</label><input id="ne-correo" type="email"
+          placeholder="estudiante@utmachala.edu.ec" /></div>
+      <div class="field"><label>Matrícula (mín. 6 dígitos)</label><input id="ne-matricula" type="text"
+          placeholder="123456" maxlength="10" /></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-nuevo-estudiante')">Cancelar</button>
+        <button class="btn btn-success" onclick="guardarEstudiante()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM -->
+  <div id="confirm-overlay">
+    <div id="confirm-box">
+      <h3 id="confirm-title">Confirmar acción</h3>
+      <p id="confirm-msg">Esta acción no se puede deshacer.</p>
+      <div class="flex-row">
+        <button class="btn btn-ghost ml-auto" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-ok-btn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CREDS = { u: 'admin', p: '123' };
+    const MAX_P = 3, MULTA = 0.5, DIAS = 7, SK = 'biblio_utm';
+    const DEF = [
+      { titulo: 'Cien años de soledad', categoria: 'Novela', genero: 'Realismo mágico' },
+      { titulo: 'Clean Code', categoria: 'Técnico', genero: 'Programación' },
+      { titulo: 'El principito', categoria: 'Infantil', genero: 'Fábula' },
+      { titulo: 'Python para todos', categoria: 'Técnico', genero: 'Educativo' },
+      { titulo: '1984', categoria: 'Novela', genero: 'Distopía' },
+      { titulo: 'Don Quijote', categoria: 'Clásico', genero: 'Aventura' },
+    ];
+
+    let S = { libros: [], estudiantes: [], prestamos: [], cL: 100, cP: 1000, cE: 101 };
+    let loginIntentos = 3, confirmCB = null;
+
+    function save() { localStorage.setItem(SK, JSON.stringify(S)); }
+    function load() {
+      const r = localStorage.getItem(SK);
+      if (r) { try { S = JSON.parse(r); } catch { } }
+      else { DEF.forEach(l => addLibroSilent(l.titulo, l.categoria, l.genero)); save(); }
+    }
+
+    document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+    function handleLogin() {
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value;
+      const al = document.getElementById('login-alert');
+      if (u === CREDS.u && p === CREDS.p) {
+        load();
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').classList.remove('hidden');
+        showView('catalogo');
+      } else {
+        loginIntentos--;
+        if (loginIntentos <= 0) { al.innerHTML = ah('error', 'Acceso denegado. Recarga la pagina para intentar de nuevo.'); document.getElementById('btn-login').disabled = true; }
+        else al.innerHTML = ah('error', 'Credenciales incorrectas. Intentos restantes: ' + loginIntentos);
+      }
+    }
+    function logout() { save(); document.getElementById('app').classList.add('hidden'); document.getElementById('login-screen').style.display = ''; document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = ''; document.getElementById('login-alert').innerHTML = ''; loginIntentos = 3; document.getElementById('btn-login').disabled = false; }
+
+    const VIEWS = ['catalogo', 'prestamo', 'devolucion', 'agregar-libro', 'eliminar-libro', 'eliminar-estudiante'];
+    const TITLES = { catalogo: 'Catalogo de Libros', prestamo: 'Registrar Prestamo', devolucion: 'Devoluciones', 'agregar-libro': 'Agregar Libro', 'eliminar-libro': 'Eliminar Libro', 'eliminar-estudiante': 'Eliminar Estudiante' };
+    function showView(v) {
+      VIEWS.forEach(x => { document.getElementById('view-' + x).classList.add('hidden'); document.getElementById('nav-' + x).classList.remove('active'); });
+      const el = document.getElementById('view-' + v);
+      el.classList.remove('hidden'); el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in');
+      document.getElementById('nav-' + v).classList.add('active');
+      document.getElementById('topbar-title').textContent = TITLES[v];
+      chips(); rv(v);
+    }
+    function rv(v) {
+      if (v === 'catalogo') rCatalogo();
+      if (v === 'prestamo') rPrestamo();
+      if (v === 'devolucion') rDevolucion();
+      if (v === 'eliminar-libro') rElimLib();
+      if (v === 'eliminar-estudiante') rElimEst();
+    }
+
+    function chips() {
+      const d = S.libros.filter(l => l.disponible).length;
+      const p = S.libros.filter(l => !l.disponible).length;
+      document.getElementById('chip-disponibles').textContent = d + ' disponibles';
+      document.getElementById('chip-prestados').textContent = p + ' prestados';
+      document.getElementById('chip-estudiantes').textContent = S.estudiantes.length + ' estudiantes';
+    }
+
+    function rCatalogo() {
+      const libs = S.libros, d = libs.filter(l => l.disponible).length;
+      document.getElementById('catalogo-count').textContent = libs.length + ' libro' + (libs.length !== 1 ? 's' : '') + ' · ' + d + ' disponible' + (d !== 1 ? 's' : '');
+      document.getElementById('catalogo-stats').innerHTML =
+        sc('📚', 'var(--accent)', 'rgba(79,142,247,.12)', libs.length, 'Total libros') +
+        sc('✅', 'var(--green)', 'rgba(34,197,94,.12)', d, 'Disponibles') +
+        sc('📤', 'var(--red)', 'rgba(239,68,68,.12)', libs.length - d, 'Prestados') +
+        sc('🎓', 'var(--amber)', 'rgba(245,158,11,.12)', S.estudiantes.length, 'Estudiantes') +
+        sc('🔄', 'var(--accent2)', 'rgba(124,58,237,.12)', S.prestamos.length, 'Prestamos activos');
+      const g = document.getElementById('catalogo-grid');
+      if (!libs.length) { g.innerHTML = '<div class="text-muted">El catalogo esta vacio.</div>'; return; }
+      g.innerHTML = libs.map(l => {
+        const pr = S.prestamos.find(p => p.idLibro === l.id);
+        const est = pr ? S.estudiantes.find(e => e.id === pr.idEstudiante) : null;
+        return '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(79,142,247,.1);font-size:24px">📖</div><div style="flex:1;overflow:hidden"><div class="card-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + e(l.titulo) + '</div><div class="card-meta">' + e(l.categoria) + ' · ' + e(l.genero) + '</div><div class="card-id">' + e(l.id) + '</div></div></div><div class="card-footer"><span class="badge ' + (l.disponible ? 'badge-green' : 'badge-red') + '">' + (l.disponible ? 'Disponible' : 'Prestado') + '</span>' + (est ? '<span class="text-muted" style="font-size:12px">→ ' + e(est.nombre) + '</span>' : '') + (pr ? '<span class="text-muted" style="font-size:11px;margin-left:auto">Dev: ' + fd(pr.fechaDevolucion) + '</span>' : '') + '</div></div>';
+      }).join('');
+    }
+    function sc(ico, clr, bg, val, lbl) { return '<div class="stat-card"><div class="stat-card-icon" style="background:' + bg + ';color:' + clr + '">' + ico + '</div><div><div class="stat-card-val">' + val + '</div><div class="stat-card-label">' + lbl + '</div></div></div>'; }
+
+    function rPrestamo() {
+      const sE = document.getElementById('prestamo-estudiante'), sL = document.getElementById('prestamo-libro');
+      document.getElementById('prestamo-alert').innerHTML = '';
+      sE.innerHTML = '<option value="">— Seleccione un estudiante —</option>';
+      S.estudiantes.forEach(x => { const o = document.createElement('option'); o.value = x.id; o.textContent = x.nombre + ' (Mat: ' + x.matricula + ') – ' + x.librosPrestados + '/' + MAX_P; sE.appendChild(o); });
+      sL.innerHTML = '<option value="">— Seleccione un libro disponible —</option>';
+      S.libros.filter(l => l.disponible).forEach(l => { const o = document.createElement('option'); o.value = l.id; o.textContent = l.titulo + ' | ' + l.categoria; sL.appendChild(o); });
+      sE.onchange = () => {
+        const est = S.estudiantes.find(x => x.id == sE.value);
+        const inf = document.getElementById('prestamo-info-estudiante');
+        if (est) {
+          const t = est.multas > 0 ? 'warning' : est.librosPrestados >= MAX_P ? 'error' : 'success';
+          const m = est.multas > 0 ? 'Multas pendientes: $' + est.multas.toFixed(2) : est.librosPrestados >= MAX_P ? 'Limite de prestamos alcanzado' : 'Puede recibir prestamos (' + est.librosPrestados + '/' + MAX_P + ')';
+          inf.innerHTML = '<div class="alert alert-' + t + '">' + m + '</div>';
+        } else inf.innerHTML = '';
+      };
+      rPA();
+    }
+    function rPA() {
+      const c = document.getElementById('prestamos-activos-list');
+      if (!S.prestamos.length) { c.innerHTML = '<div class="text-muted">No hay prestamos activos.</div>'; return; }
+      c.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Codigo</th><th>Estudiante</th><th>Libro</th><th>Salida</th><th>Devolucion</th><th>Estado</th></tr></thead><tbody>' +
+        S.prestamos.map(p => {
+          const est = S.estudiantes.find(x => x.id === p.idEstudiante);
+          const lib = S.libros.find(l => l.id === p.idLibro);
+          const at = new Date() > new Date(p.fechaDevolucion);
+          return '<tr><td><span class="badge badge-blue">#' + p.codigo + '</span></td><td>' + e(est ? est.nombre : '—') + '</td><td>' + e(lib ? lib.titulo : '—') + '</td><td>' + fd(p.fechaSalida) + '</td><td>' + fd(p.fechaDevolucion) + '</td><td><span class="badge ' + (at ? 'badge-red' : 'badge-green') + '">' + (at ? 'Atrasado' : 'Al dia') + '</span></td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    function confirmarPrestamo() {
+      const idE = document.getElementById('prestamo-estudiante').value;
+      const idL = document.getElementById('prestamo-libro').value;
+      const al = document.getElementById('prestamo-alert');
+      if (!idE || !idL) { al.innerHTML = ah('error', 'Seleccione un estudiante y un libro.'); return; }
+      const est = S.estudiantes.find(x => x.id == idE);
+      const lib = S.libros.find(l => l.id === idL);
+      if (!est || !lib) { al.innerHTML = ah('error', 'Datos no validos.'); return; }
+      if (!lib.disponible) { al.innerHTML = ah('error', 'El libro ya no esta disponible.'); return; }
+      if (est.multas > 0) { al.innerHTML = ah('error', 'El estudiante tiene multas pendientes: $' + est.multas.toFixed(2)); return; }
+      if (est.librosPrestados >= MAX_P) { al.innerHTML = ah('error', 'Limite de prestamos alcanzado.'); return; }
+      const hoy = new Date(), vence = new Date(hoy); vence.setDate(vence.getDate() + DIAS);
+      const pr = { codigo: S.cP++, idEstudiante: est.id, idLibro: lib.id, fechaSalida: hoy.toISOString(), fechaDevolucion: vence.toISOString() };
+      S.prestamos.push(pr); lib.disponible = false; est.librosPrestados++; save(); chips();
+      al.innerHTML = ah('success', 'Prestamo registrado. Codigo: #' + pr.codigo + '. Devolver antes del ' + fd(vence) + '.');
+      rPrestamo();
+    }
+
+    function rDevolucion() {
+      const c = document.getElementById('devolucion-list'), em = document.getElementById('devolucion-empty');
+      document.getElementById('devolucion-alert').innerHTML = '';
+      if (!S.prestamos.length) { c.innerHTML = ''; em.classList.remove('hidden'); return; }
+      em.classList.add('hidden');
+      c.innerHTML = S.prestamos.map(p => {
+        const est = S.estudiantes.find(x => x.id === p.idEstudiante);
+        const lib = S.libros.find(l => l.id === p.idLibro);
+        const hoy = new Date(), vence = new Date(p.fechaDevolucion), at = hoy > vence;
+        const dias = at ? Math.ceil((hoy - vence) / 86400000) : 0;
+        const sem = Math.ceil(dias / 7), multa = sem * MULTA;
+        return '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(239,68,68,.1)">↩️</div><div><div class="card-title">' + e(lib ? lib.titulo : '—') + '</div><div class="card-meta">' + e(est ? est.nombre : '—') + '</div><div class="card-id">Codigo #' + p.codigo + '</div></div></div><div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">Vence: ' + fd(p.fechaDevolucion) + (at ? ' | <span style="color:var(--red)">' + dias + ' dia(s) atraso · Multa: $' + multa.toFixed(2) + '</span>' : ' | <span style="color:var(--green)">Al dia</span>') + '</div><div class="card-footer"><span class="badge ' + (at ? 'badge-red' : 'badge-green') + '">' + (at ? 'Atrasado' : 'Al dia') + '</span><button class="btn btn-warning btn-sm ml-auto" onclick="procesarDevolucion(' + p.codigo + ')">↩️ Devolver</button></div></div>';
+      }).join('');
+    }
+    function procesarDevolucion(codigo) {
+      const al = document.getElementById('devolucion-alert');
+      const idx = S.prestamos.findIndex(p => p.codigo == codigo);
+      if (idx === -1) { al.innerHTML = ah('error', 'Prestamo no encontrado.'); return; }
+      const p = S.prestamos[idx];
+      const est = S.estudiantes.find(x => x.id === p.idEstudiante);
+      const lib = S.libros.find(l => l.id === p.idLibro);
+      const hoy = new Date(), vence = new Date(p.fechaDevolucion), at = hoy > vence;
+      const dias = at ? Math.ceil((hoy - vence) / 86400000) : 0;
+      const sem = Math.ceil(dias / 7), multa = sem * MULTA;
+      if (lib) lib.disponible = true;
+      if (est) { est.librosPrestados = Math.max(0, est.librosPrestados - 1); if (at) est.multas += multa; }
+      S.prestamos.splice(idx, 1); save(); chips();
+      al.innerHTML = ah(at ? 'warning' : 'success', at ? 'Devolucion con ' + dias + ' dia(s) de atraso. Multa: $' + multa.toFixed(2) : 'Devolucion exitosa. Sin multas.');
+      rDevolucion();
+    }
+
+    function guardarEstudiante() {
+      const nm = document.getElementById('ne-nombre').value.trim();
+      const co = document.getElementById('ne-correo').value.trim();
+      const ma = document.getElementById('ne-matricula').value.trim();
+      const al = document.getElementById('modal-est-alert');
+      if (!nm || !co || !ma) { al.innerHTML = ah('error', 'Todos los campos son obligatorios.'); return; }
+      if (!nm.replace(/\s/g, '').match(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$/)) { al.innerHTML = ah('error', 'El nombre solo debe contener letras y espacios.'); return; }
+      if (!vEmail(co)) { al.innerHTML = ah('error', 'El correo no tiene formato valido.'); return; }
+      if (!ma.match(/^\d{6,}$/)) { al.innerHTML = ah('error', 'La matricula debe tener solo numeros (min. 6 digitos).'); return; }
+      if (S.estudiantes.find(x => x.matricula === ma)) { al.innerHTML = ah('error', 'Ya existe un estudiante con esa matricula.'); return; }
+      const id = S.cE++;
+      S.estudiantes.push({ id, nombre: nm, correo: co, matricula: ma, librosPrestados: 0, multas: 0 });
+      save(); chips(); closeModal('modal-nuevo-estudiante');
+      ['ne-nombre', 'ne-correo', 'ne-matricula'].forEach(x => document.getElementById(x).value = ''); al.innerHTML = '';
+      rPrestamo();
+    }
+
+    function addLibroSilent(t, c, g) { S.libros.push({ id: 'LIB-' + S.cL++, titulo: t, categoria: c, genero: g, disponible: true }); }
+    function agregarLibro() {
+      const t = document.getElementById('al-titulo').value.trim();
+      const c = document.getElementById('al-categoria').value.trim();
+      const g = document.getElementById('al-genero').value.trim();
+      const al = document.getElementById('agregar-libro-alert');
+      if (!t || !c || !g) { al.innerHTML = ah('error', 'Todos los campos son obligatorios.'); return; }
+      addLibroSilent(t, c, g); save(); chips();
+      al.innerHTML = ah('success', 'Libro "' + t + '" agregado al catalogo.'); limpiarFormLibro();
+    }
+    function limpiarFormLibro() { ['al-titulo', 'al-categoria', 'al-genero'].forEach(x => document.getElementById(x).value = ''); }
+
+    function rElimLib() {
+      const g = document.getElementById('eliminar-libro-grid'), em = document.getElementById('eliminar-libro-empty');
+      document.getElementById('eliminar-libro-alert').innerHTML = '';
+      const dis = S.libros.filter(l => l.disponible);
+      if (!dis.length) { g.innerHTML = ''; em.classList.remove('hidden'); return; }
+      em.classList.add('hidden');
+      g.innerHTML = dis.map(l => '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(239,68,68,.1)">📖</div><div><div class="card-title">' + e(l.titulo) + '</div><div class="card-meta">' + e(l.categoria) + ' · ' + e(l.genero) + '</div><div class="card-id">' + e(l.id) + '</div></div></div><div class="card-footer"><span class="badge badge-green">Disponible</span><button class="btn btn-danger btn-sm ml-auto" onclick="confElimLib(\'' + l.id + '\')">Eliminar</button></div></div>').join('');
+    }
+    function confElimLib(id) {
+      const l = S.libros.find(x => x.id === id); if (!l) return;
+      openConfirm('Eliminar libro?', 'Se eliminara: "' + l.titulo + '"', () => {
+        S.libros = S.libros.filter(x => x.id !== id); save(); chips();
+        document.getElementById('eliminar-libro-alert').innerHTML = ah('success', 'Libro eliminado correctamente.'); rElimLib();
+      });
+    }
+
+    function rElimEst() {
+      const g = document.getElementById('eliminar-est-grid'), em = document.getElementById('eliminar-est-empty');
+      document.getElementById('eliminar-est-alert').innerHTML = '';
+      if (!S.estudiantes.length) { g.innerHTML = ''; em.classList.remove('hidden'); return; }
+      em.classList.add('hidden');
+      g.innerHTML = S.estudiantes.map(est => {
+        const ac = S.prestamos.filter(p => p.idEstudiante === est.id).length;
+        return '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(124,58,237,.1)">🎓</div><div><div class="card-title">' + e(est.nombre) + '</div><div class="card-meta">Mat: ' + e(est.matricula) + ' · ' + e(est.correo) + '</div><div class="card-id">ID: ' + est.id + '</div></div></div><div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">' + est.librosPrestados + '/' + MAX_P + ' prestamos' + (est.multas > 0 ? ' · <span style="color:var(--amber)">Multa: $' + est.multas.toFixed(2) + '</span>' : '') + '</div><div class="card-footer"><span class="badge ' + (ac ? 'badge-red' : 'badge-green') + '">' + (ac ? ac + ' activo(s)' : 'Sin prestamos') + '</span><button class="btn btn-danger btn-sm ml-auto" ' + (ac ? 'disabled' : '') + 'onclick="confElimEst(' + est.id + ')">Eliminar</button></div></div>';
+      }).join('');
+    }
+    function confElimEst(id) {
+      const est = S.estudiantes.find(x => x.id === id); if (!est) return;
+      if (S.prestamos.filter(p => p.idEstudiante === id).length) { document.getElementById('eliminar-est-alert').innerHTML = ah('error', 'El estudiante tiene prestamos activos.'); return; }
+      openConfirm('Eliminar estudiante?', '"' + est.nombre + '" (Mat: ' + est.matricula + ')', () => {
+        S.estudiantes = S.estudiantes.filter(x => x.id !== id); save(); chips();
+        document.getElementById('eliminar-est-alert').innerHTML = ah('success', 'Estudiante eliminado.'); rElimEst();
+      });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(el => { el.addEventListener('click', ev => { if (ev.target === el) el.classList.remove('open'); }); });
+    function openConfirm(title, msg, cb) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-msg').textContent = msg;
+      confirmCB = cb; document.getElementById('confirm-overlay').classList.add('open');
+    }
+    function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); confirmCB = null; }
+    document.getElementById('confirm-ok-btn').addEventListener('click', () => { if (confirmCB) confirmCB(); closeConfirm(); });
+    document.getElementById('confirm-overlay').addEventListener('click', ev => { if (ev.target === document.getElementById('confirm-overlay')) closeConfirm(); });
+
+    function ah(t, m) { return '<div class="alert alert-' + t + '">' + m + '</div>'; }
+    function e(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function fd(iso) { if (!iso) return '—'; const d = new Date(iso); return d.toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+    function vEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+  </script>
+</body>
+
+</html>

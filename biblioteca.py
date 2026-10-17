@@ -28,7 +28,7 @@ ARCHIVO_DATOS        = "biblioteca_datos.json"
 MULTA_POR_SEMANA     = 0.50      # dólares por semana de retraso
 MAX_LIBROS_PRESTADOS = 3         # máximo simultáneo por estudiante
 DIAS_PRESTAMO_LIBRO  = 7         # días que dura un préstamo de libro
-CREDENCIALES_ADMIN   = {"usuario": "admin_biblioteca", "contrasena": "123"}
+CREDENCIALES_ADMIN   = {"usuario": "admin", "contrasena": "123"}
 
 LIBROS_DEFAULT = [
     ("Cien años de soledad", "Novela",   "Realismo mágico"),
