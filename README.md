@@ -1,7 +1,7 @@
 # 📚 BibliotecaVirtual — Sistema de Gestión de Biblioteca Digital
 
 **Universidad Técnica de Machala (UTMACH)**  
-**Facultad de Ingeniería Civil — Carrera de Tecnologías de la Información**  
+**Facultad de Ingeniería Civil — Carrera de Ciencia de Datos e Inteligencia Artificial**  
 **Asignatura:** Estructura de Datos  
 **Periodo Académico:** Primer Hemisemestre  
 
