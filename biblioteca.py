@@ -73,6 +73,69 @@ def validar_matricula(matricula: str) -> bool:
 
 
 # ─────────────────────────────────────────────
+# ALGORITMOS RECURSIVOS (ESTRUCTURA DE DATOS)
+# ─────────────────────────────────────────────
+
+def calcular_multa_recursiva(dias_retraso: int, tarifa_por_semana: float = MULTA_POR_SEMANA) -> float:
+    """
+    Función recursiva para calcular la multa acumulada por semanas de retraso.
+    - Caso base: dias_retraso <= 0 -> 0.0 (no hay más días pendientes).
+    - Paso recursivo: Suma la tarifa de 1 semana (7 días) y evalúa los días restantes.
+    """
+    if dias_retraso <= 0:
+        return 0.0
+    return tarifa_por_semana + calcular_multa_recursiva(dias_retraso - 7, tarifa_por_semana)
+
+
+def buscar_prestamo_recursivo(prestamos: list, codigo: int, indice: int = 0):
+    """
+    Búsqueda lineal recursiva de un préstamo por su código identificador.
+    - Caso base 1: indice >= len(prestamos) -> None (no encontrado).
+    - Caso base 2: prestamos[indice]["codigo_prestamo"] == codigo -> encontrado.
+    - Paso recursivo: llamada recursiva con el siguiente índice (indice + 1).
+    """
+    if indice >= len(prestamos):
+        return None
+    if prestamos[indice]["codigo_prestamo"] == codigo:
+        return prestamos[indice]
+    return buscar_prestamo_recursivo(prestamos, codigo, indice + 1)
+
+
+def busqueda_binaria_libro_recursiva(libros: list, titulo_buscar: str, inicio: int, fin: int):
+    """
+    Búsqueda binaria recursiva de un libro en una lista ordenada por título.
+    - Complejidad: O(log n).
+    - Caso base 1: inicio > fin -> no encontrado (None).
+    - Caso base 2: el título coincide con el punto medio.
+    - Paso recursivo: llamada recursiva dividiendo el espacio de búsqueda a la mitad.
+    """
+    if inicio > fin:
+        return None
+    medio = (inicio + fin) // 2
+    titulo_medio = libros[medio].get_titulo().strip().lower()
+    busqueda = titulo_buscar.strip().lower()
+
+    if titulo_medio == busqueda:
+        return libros[medio]
+    elif busqueda < titulo_medio:
+        return busqueda_binaria_libro_recursiva(libros, titulo_buscar, inicio, medio - 1)
+    else:
+        return busqueda_binaria_libro_recursiva(libros, titulo_buscar, medio + 1, fin)
+
+
+def contar_libros_disponibles_recursivo(libros: list, indice: int = 0) -> int:
+    """
+    Conteo recursivo de libros disponibles en el catálogo.
+    - Caso base: indice >= len(libros) -> 0.
+    - Paso recursivo: (1 si está disponible, 0 si no) + llamada recursiva al siguiente.
+    """
+    if indice >= len(libros):
+        return 0
+    actual = 1 if libros[indice].esta_disponible() else 0
+    return actual + contar_libros_disponibles_recursivo(libros, indice + 1)
+
+
+# ─────────────────────────────────────────────
 # DOMINIO: CLASES DEL MODELO
 # ─────────────────────────────────────────────
 
@@ -293,35 +356,32 @@ class Prestamo:
     def registrar_devolucion(self, codigo_prestamo: int) -> bool:
         """
         Procesa la devolución de un préstamo.
-        Calcula multa si hay retraso.
+        Utiliza búsqueda recursiva y cálculo recursivo de multas.
         """
-        for prestamo in self.__prestamos_activos:
-            if prestamo["codigo_prestamo"] != codigo_prestamo:
-                continue
+        prestamo = buscar_prestamo_recursivo(self.__prestamos_activos, codigo_prestamo)
+        if not prestamo:
+            print("Préstamo no encontrado.")
+            return False
 
-            estudiante = prestamo["estudiante"]
-            libro      = prestamo["libro"]
-            fecha_real = datetime.now()
-            fecha_esp  = prestamo["fecha_devolucion_esperada"]
+        estudiante = prestamo["estudiante"]
+        libro      = prestamo["libro"]
+        fecha_real = datetime.now()
+        fecha_esp  = prestamo["fecha_devolucion_esperada"]
 
-            if fecha_real > fecha_esp:
-                dias    = (fecha_real - fecha_esp).days
-                semanas = math.ceil(dias / 7)
-                multa   = semanas * MULTA_POR_SEMANA
-                imprimir_titulo("DEVOLUCIÓN CON RETRASO")
-                print(f"Días de retraso: {dias} | Multa aplicada: ${multa:.2f}")
-                estudiante.agregar_multa(multa)
-            else:
-                imprimir_titulo("DEVOLUCIÓN EXITOSA")
-                print("Sin multa por retraso.")
+        if fecha_real > fecha_esp:
+            dias  = (fecha_real - fecha_esp).days
+            multa = calcular_multa_recursiva(dias, MULTA_POR_SEMANA)
+            imprimir_titulo("DEVOLUCIÓN CON RETRASO")
+            print(f"Días de retraso: {dias} | Multa aplicada (recursiva): ${multa:.2f}")
+            estudiante.agregar_multa(multa)
+        else:
+            imprimir_titulo("DEVOLUCIÓN EXITOSA")
+            print("Sin multa por retraso.")
 
-            libro.set_disponible(True)
-            estudiante.decrementar_prestamos()
-            self.__prestamos_activos.remove(prestamo)
-            return True
-
-        print("Préstamo no encontrado.")
-        return False
+        libro.set_disponible(True)
+        estudiante.decrementar_prestamos()
+        self.__prestamos_activos.remove(prestamo)
+        return True
 
     def prestamos_activos_de_estudiante(self, estudiante: Estudiante) -> list:
         """Retorna los préstamos activos de un estudiante específico."""

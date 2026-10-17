@@ -1054,6 +1054,30 @@
     let S = { libros: [], estudiantes: [], prestamos: [], cL: 100, cP: 1000, cE: 101 };
     let loginIntentos = 3, confirmCB = null;
 
+    // ─────────────────────────────────────────────
+    // ALGORITMOS RECURSIVOS (ESTRUCTURA DE DATOS)
+    // ─────────────────────────────────────────────
+    function calcularMultaRecursiva(dias, tarifa = MULTA) {
+      if (dias <= 0) return 0.0;
+      return tarifa + calcularMultaRecursiva(dias - 7, tarifa);
+    }
+
+    function contarDisponiblesRecursivo(libros, index = 0) {
+      if (index >= libros.length) return 0;
+      const actual = libros[index].disponible ? 1 : 0;
+      return actual + contarDisponiblesRecursivo(libros, index + 1);
+    }
+
+    function buscarLibroBinarioRecursivo(librosOrdenados, titulo, inicio, fin) {
+      if (inicio > fin) return null;
+      const medio = Math.floor((inicio + fin) / 2);
+      const tMedio = librosOrdenados[medio].titulo.trim().toLowerCase();
+      const tBuscado = titulo.trim().toLowerCase();
+      if (tMedio === tBuscado) return librosOrdenados[medio];
+      if (tBuscado < tMedio) return buscarLibroBinarioRecursivo(librosOrdenados, titulo, inicio, medio - 1);
+      return buscarLibroBinarioRecursivo(librosOrdenados, titulo, medio + 1, fin);
+    }
+
     function save() { localStorage.setItem(SK, JSON.stringify(S)); }
     function load() {
       const r = localStorage.getItem(SK);
@@ -1098,15 +1122,15 @@
     }
 
     function chips() {
-      const d = S.libros.filter(l => l.disponible).length;
-      const p = S.libros.filter(l => !l.disponible).length;
+      const d = contarDisponiblesRecursivo(S.libros);
+      const p = S.libros.length - d;
       document.getElementById('chip-disponibles').textContent = d + ' disponibles';
       document.getElementById('chip-prestados').textContent = p + ' prestados';
       document.getElementById('chip-estudiantes').textContent = S.estudiantes.length + ' estudiantes';
     }
 
     function rCatalogo() {
-      const libs = S.libros, d = libs.filter(l => l.disponible).length;
+      const libs = S.libros, d = contarDisponiblesRecursivo(libs);
       document.getElementById('catalogo-count').textContent = libs.length + ' libro' + (libs.length !== 1 ? 's' : '') + ' · ' + d + ' disponible' + (d !== 1 ? 's' : '');
       document.getElementById('catalogo-stats').innerHTML =
         sc('📚', 'var(--accent)', 'rgba(79,142,247,.12)', libs.length, 'Total libros') +
@@ -1181,7 +1205,7 @@
         const lib = S.libros.find(l => l.id === p.idLibro);
         const hoy = new Date(), vence = new Date(p.fechaDevolucion), at = hoy > vence;
         const dias = at ? Math.ceil((hoy - vence) / 86400000) : 0;
-        const sem = Math.ceil(dias / 7), multa = sem * MULTA;
+        const multa = calcularMultaRecursiva(dias, MULTA);
         return '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(239,68,68,.1)">↩️</div><div><div class="card-title">' + e(lib ? lib.titulo : '—') + '</div><div class="card-meta">' + e(est ? est.nombre : '—') + '</div><div class="card-id">Codigo #' + p.codigo + '</div></div></div><div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">Vence: ' + fd(p.fechaDevolucion) + (at ? ' | <span style="color:var(--red)">' + dias + ' dia(s) atraso · Multa: $' + multa.toFixed(2) + '</span>' : ' | <span style="color:var(--green)">Al dia</span>') + '</div><div class="card-footer"><span class="badge ' + (at ? 'badge-red' : 'badge-green') + '">' + (at ? 'Atrasado' : 'Al dia') + '</span><button class="btn btn-warning btn-sm ml-auto" onclick="procesarDevolucion(' + p.codigo + ')">↩️ Devolver</button></div></div>';
       }).join('');
     }
@@ -1194,7 +1218,7 @@
       const lib = S.libros.find(l => l.id === p.idLibro);
       const hoy = new Date(), vence = new Date(p.fechaDevolucion), at = hoy > vence;
       const dias = at ? Math.ceil((hoy - vence) / 86400000) : 0;
-      const sem = Math.ceil(dias / 7), multa = sem * MULTA;
+      const multa = calcularMultaRecursiva(dias, MULTA);
       if (lib) lib.disponible = true;
       if (est) { est.librosPrestados = Math.max(0, est.librosPrestados - 1); if (at) est.multas += multa; }
       S.prestamos.splice(idx, 1); save(); chips();
