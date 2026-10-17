@@ -183,6 +183,124 @@ def buscar_libro_catalogo(libros: list, titulo_buscar: str):
 
 
 # ─────────────────────────────────────────────
+# ESTRUCTURAS DE DATOS LINEALES: PILA Y COLA
+# ─────────────────────────────────────────────
+
+class Nodo:
+    """Nodo dinámico para estructuras enlazadas (Pila y Cola)."""
+    def __init__(self, dato):
+        self.dato = dato
+        self.siguiente = None
+
+
+class Pila:
+    """
+    Estructura de Datos: Pila (Stack - LIFO: Last In, First Out).
+    El último elemento en ingresar es el primero en ser procesado.
+    Caso de uso: Historial de acciones recientes / Auditoría / Deshacer (Undo).
+    """
+    def __init__(self):
+        self.__cima: Nodo = None
+        self.__tamano: int = 0
+
+    def apilar(self, elemento):
+        """Inserta un elemento en la cima de la pila (Push). O(1)"""
+        nuevo = Nodo(elemento)
+        nuevo.siguiente = self.__cima
+        self.__cima = nuevo
+        self.__tamano += 1
+
+    def desapilar(self):
+        """Retira y retorna el elemento en la cima (Pop). O(1)"""
+        if self.esta_vacia():
+            return None
+        elemento = self.__cima.dato
+        self.__cima = self.__cima.siguiente
+        self.__tamano -= 1
+        return elemento
+
+    def ver_cima(self):
+        """Consulta el elemento de la cima sin retirarlo (Peek). O(1)"""
+        if self.esta_vacia():
+            return None
+        return self.__cima.dato
+
+    def esta_vacia(self) -> bool:
+        """Verifica si la pila se encuentra vacía."""
+        return self.__cima is None
+
+    def tamano(self) -> int:
+        """Retorna la cantidad actual de elementos apilados."""
+        return self.__tamano
+
+    def listar_elementos(self) -> list:
+        """Retorna los elementos desde la cima hacia la base."""
+        elementos = []
+        actual = self.__cima
+        while actual:
+            elementos.append(actual.dato)
+            actual = actual.siguiente
+        return elementos
+
+
+class Cola:
+    """
+    Estructura de Datos: Cola (Queue - FIFO: First In, First Out).
+    El primer elemento en ingresar es el primero en ser atendido.
+    Caso de uso: Cola de reservas y espera para libros no disponibles.
+    """
+    def __init__(self):
+        self.__frente: Nodo = None
+        self.__final: Nodo = None
+        self.__tamano: int = 0
+
+    def encolar(self, elemento):
+        """Inserta un elemento al final de la cola (Enqueue). O(1)"""
+        nuevo = Nodo(elemento)
+        if self.esta_vacia():
+            self.__frente = nuevo
+            self.__final = nuevo
+        else:
+            self.__final.siguiente = nuevo
+            self.__final = nuevo
+        self.__tamano += 1
+
+    def desencolar(self):
+        """Retira y retorna el elemento al frente de la cola (Dequeue). O(1)"""
+        if self.esta_vacia():
+            return None
+        elemento = self.__frente.dato
+        self.__frente = self.__frente.siguiente
+        if self.__frente is None:
+            self.__final = None
+        self.__tamano -= 1
+        return elemento
+
+    def ver_frente(self):
+        """Consulta el elemento al frente sin retirarlo (Peek). O(1)"""
+        if self.esta_vacia():
+            return None
+        return self.__frente.dato
+
+    def esta_vacia(self) -> bool:
+        """Verifica si la cola se encuentra vacía."""
+        return self.__frente is None
+
+    def tamano(self) -> int:
+        """Retorna la cantidad actual de elementos encolados."""
+        return self.__tamano
+
+    def listar_elementos(self) -> list:
+        """Retorna los elementos desde el frente hasta el final."""
+        elementos = []
+        actual = self.__frente
+        while actual:
+            elementos.append(actual.dato)
+            actual = actual.siguiente
+        return elementos
+
+
+# ─────────────────────────────────────────────
 # DOMINIO: CLASES DEL MODELO
 # ─────────────────────────────────────────────
 
@@ -371,7 +489,14 @@ class Prestamo:
         y el estudiante cumple las condiciones.
         """
         if not libro.esta_disponible():
-            print("El libro no está disponible.")
+            print(f"El libro '{libro.get_titulo()}' no está disponible actualmente.")
+            if "cola_espera" in datos_sistema and datos_sistema["cola_espera"] is not None:
+                datos_sistema["cola_espera"].encolar({
+                    "estudiante": estudiante,
+                    "libro": libro,
+                    "fecha": datetime.now().strftime("%d/%m/%Y %H:%M")
+                })
+                print(f"[COLA FIFO] Estudiante {estudiante.get_persona().get_nombre()} añadido a la Cola de Espera (Turno #{datos_sistema['cola_espera'].tamano()}).")
             return False
         if not estudiante.puede_prestar():
             return False
@@ -393,6 +518,14 @@ class Prestamo:
         libro.set_disponible(False)
         estudiante.incrementar_prestamos()
 
+        # Registro en la Pila de Historial (LIFO)
+        if "pila_historial" in datos_sistema and datos_sistema["pila_historial"] is not None:
+            datos_sistema["pila_historial"].apilar({
+                "tipo": "PRÉSTAMO",
+                "detalle": f"Libro '{libro.get_titulo()}' prestado a {estudiante.get_persona().get_nombre()} (Cód: #{codigo})",
+                "fecha": fecha_hoy.strftime("%d/%m/%Y %H:%M")
+            })
+
         imprimir_titulo("PRESTAMO REGISTRADO")
         print(f"Código    : {codigo}")
         print(f"Estudiante: {estudiante.get_persona().get_nombre()}")
@@ -403,7 +536,7 @@ class Prestamo:
     def registrar_devolucion(self, codigo_prestamo: int) -> bool:
         """
         Procesa la devolución de un préstamo.
-        Utiliza búsqueda recursiva y cálculo recursivo de multas.
+        Utiliza búsqueda recursiva, cálculo recursivo de multas y estructuras Pila/Cola.
         """
         prestamo = buscar_prestamo_recursivo(self.__prestamos_activos, codigo_prestamo)
         if not prestamo:
@@ -428,6 +561,21 @@ class Prestamo:
         libro.set_disponible(True)
         estudiante.decrementar_prestamos()
         self.__prestamos_activos.remove(prestamo)
+
+        # Registro en la Pila de Historial (LIFO)
+        if "pila_historial" in datos_sistema and datos_sistema["pila_historial"] is not None:
+            datos_sistema["pila_historial"].apilar({
+                "tipo": "DEVOLUCIÓN",
+                "detalle": f"Libro '{libro.get_titulo()}' devuelto por {estudiante.get_persona().get_nombre()} (Cód: #{codigo_prestamo})",
+                "fecha": fecha_real.strftime("%d/%m/%Y %H:%M")
+            })
+
+        # Atención del siguiente estudiante en la Cola de Espera (FIFO)
+        if "cola_espera" in datos_sistema and datos_sistema["cola_espera"] is not None and not datos_sistema["cola_espera"].esta_vacia():
+            siguiente = datos_sistema["cola_espera"].ver_frente()
+            if siguiente["libro"].get_id() == libro.get_id():
+                atendido = datos_sistema["cola_espera"].desencolar()
+                print(f"\n[COLA FIFO] ¡Turno asignado! Se notificó a {atendido['estudiante'].get_persona().get_nombre()} que '{libro.get_titulo()}' está disponible para retirar.")
         return True
 
     def prestamos_activos_de_estudiante(self, estudiante: Estudiante) -> list:
@@ -502,9 +650,11 @@ def cargar_datos(archivo: str = ARCHIVO_DATOS) -> tuple:
 # ─────────────────────────────────────────────
 
 datos_sistema: dict = {
-    "libros"     : [],
-    "estudiantes": [],
-    "prestamos"  : None,
+    "libros"        : [],
+    "estudiantes"   : [],
+    "prestamos"     : None,
+    "pila_historial": Pila(),
+    "cola_espera"   : Cola(),
 }
 
 
@@ -529,19 +679,21 @@ def mostrar_menu():
     imprimir_titulo("MENÚ PRINCIPAL")
 
     opciones = [
-        ("Seleccione...",             "0"),
-        ("1. Registrar préstamo",     "1"),
-        ("2. Registrar devolución",   "2"),
-        ("3. Ver catálogo",           "3"),
-        ("4. Agregar libro",          "4"),
-        ("5. Eliminar libro",         "5"),
-        ("6. Eliminar estudiante",    "6"),
-        ("7. Salir",                  "7"),
+        ("Seleccione...",                            "0"),
+        ("1. Registrar préstamo",                    "1"),
+        ("2. Registrar devolución",                  "2"),
+        ("3. Ver catálogo",                          "3"),
+        ("4. Agregar libro",                         "4"),
+        ("5. Eliminar libro",                        "5"),
+        ("6. Eliminar estudiante",                   "6"),
+        ("7. Ver Cola de Reservas (FIFO)",           "7"),
+        ("8. Ver Historial Reciente (Pila LIFO)",    "8"),
+        ("9. Salir",                                 "9"),
     ]
 
     dropdown     = widgets.Dropdown(
         options=opciones, value="0",
-        description="Opción:", layout=widgets.Layout(width="350px"),
+        description="Opción:", layout=widgets.Layout(width="380px"),
     )
     btn_ejecutar = widgets.Button(
         description="EJECUTAR", button_style="primary",
@@ -555,6 +707,8 @@ def mostrar_menu():
         "4": widget_agregar_libro,
         "5": widget_eliminar_libro,
         "6": widget_eliminar_estudiante,
+        "7": widget_cola_espera,
+        "8": widget_pila_historial,
     }
 
     def ejecutar(_):
@@ -564,7 +718,7 @@ def mostrar_menu():
 
         if opcion in _ACCIONES_MENU:
             _ACCIONES_MENU[opcion]()
-        elif opcion == "7":
+        elif opcion == "9":
             guardar_datos(datos_sistema["libros"], datos_sistema["estudiantes"])
             print("\n¡Gracias por usar el Sistema de Biblioteca Digital!")
 
@@ -1045,6 +1199,53 @@ def widget_eliminar_estudiante():
 
 
 # ─────────────────────────────────────────────
+# WIDGETS: COLA DE RESERVAS Y PILA DE HISTORIAL
+# ─────────────────────────────────────────────
+
+def widget_cola_espera():
+    """Visualiza la Cola de Espera / Reservas de libros (FIFO)."""
+    limpiar_pantalla_widgets()
+    imprimir_titulo("COLA DE RESERVAS Y ESPERA (FIFO)")
+
+    cola = datos_sistema["cola_espera"]
+    elementos = cola.listar_elementos()
+
+    if not elementos:
+        print("La cola de espera está vacía. No hay reservas pendientes.")
+    else:
+        print(f"Total en cola: {cola.tamano()} estudiante(s) en espera.\n")
+        print("Orden de atención (Primero en llegar, Primero en ser atendido):")
+        for i, item in enumerate(elementos, start=1):
+            est = item["estudiante"].get_persona().get_nombre()
+            lib = item["libro"].get_titulo()
+            fec = item["fecha"]
+            prefijo = "⭐ [Frente - Siguiente en atender]" if i == 1 else f"   [Turno #{i}]"
+            print(f"{prefijo}: {est} | Libro: '{lib}' | Solicitado: {fec}")
+
+    _btn_volver_simple()
+
+
+def widget_pila_historial():
+    """Visualiza la Pila de Acciones Recientes (LIFO)."""
+    limpiar_pantalla_widgets()
+    imprimir_titulo("PILA DE OPERACIONES RECIENTES (LIFO)")
+
+    pila = datos_sistema["pila_historial"]
+    elementos = pila.listar_elementos()
+
+    if not elementos:
+        print("La pila de historial está vacía.")
+    else:
+        print(f"Total de operaciones apiladas: {pila.tamano()}\n")
+        print("Estructura de la Pila (Último en entrar, Primero en salir):")
+        for i, item in enumerate(elementos, start=1):
+            prefijo = "🔻 [CIMA - Última acción realizada]" if i == 1 else f"   [Nivel {i}]"
+            print(f"{prefijo} {item['tipo']} -> {item['detalle']} ({item['fecha']})")
+
+    _btn_volver_simple()
+
+
+# ─────────────────────────────────────────────
 # PROGRAMA PRINCIPAL
 # ─────────────────────────────────────────────
 
@@ -1065,9 +1266,11 @@ def main():
     if not libros:
         libros = [Libro(titulo, categoria, genero) for titulo, categoria, genero in LIBROS_DEFAULT]
 
-    datos_sistema["libros"]      = libros
-    datos_sistema["estudiantes"] = estudiantes
-    datos_sistema["prestamos"]   = Prestamo()
+    datos_sistema["libros"]         = libros
+    datos_sistema["estudiantes"]    = estudiantes
+    datos_sistema["prestamos"]      = Prestamo()
+    datos_sistema["pila_historial"] = Pila()
+    datos_sistema["cola_espera"]    = Cola()
 
     mostrar_menu()
 

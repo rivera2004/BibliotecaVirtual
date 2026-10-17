@@ -890,6 +890,13 @@
       <div class="nav-item" id="nav-eliminar-estudiante" onclick="showView('eliminar-estudiante')">
         <div class="nav-icon">&#128100;</div> Eliminar Estudiante
       </div>
+      <div class="nav-section" style="margin-top:8px">Estructuras</div>
+      <div class="nav-item" id="nav-cola-espera" onclick="showView('cola-espera')">
+        <div class="nav-icon">&#128337;</div> Cola Reservas (FIFO)
+      </div>
+      <div class="nav-item" id="nav-pila-historial" onclick="showView('pila-historial')">
+        <div class="nav-icon">&#128218;</div> Historial Pila (LIFO)
+      </div>
       <div class="sidebar-bottom">
         <div class="admin-card">
           <div class="admin-avatar">JS</div>
@@ -1024,6 +1031,45 @@
           <div class="grid grid-2" id="eliminar-est-grid"></div>
         </div>
 
+        <!-- VISTA: COLA DE RESERVAS (FIFO) -->
+        <div id="view-cola-espera" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#128337; Cola de Reservas y Espera</h2>
+            <span class="badge badge-amber">FIFO: First In, First Out</span>
+          </div>
+          <div class="alert alert-info">
+            Estructura de Datos <b>Cola (FIFO)</b>: Cuando un libro está prestado, los estudiantes que lo solicitan se encolan automáticamente. Al devolverse el ejemplar, se atiende prioritariamente al primer estudiante de la fila.
+          </div>
+          <div id="cola-espera-empty" class="text-muted hidden" style="padding:24px;text-align:center;">No hay solicitudes en la cola de espera actualmente.</div>
+          <div class="table-wrap" id="cola-espera-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Turno (FIFO)</th>
+                  <th>Estudiante</th>
+                  <th>Libro Solicitado</th>
+                  <th>Fecha de Solicitud</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="cola-espera-list"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VISTA: PILA DE HISTORIAL (LIFO) -->
+        <div id="view-pila-historial" class="fade-in hidden">
+          <div class="section-header">
+            <h2 class="section-title">&#128218; Pila de Historial Reciente</h2>
+            <span class="badge badge-blue">LIFO: Last In, First Out</span>
+          </div>
+          <div class="alert alert-info">
+            Estructura de Datos <b>Pila (LIFO)</b>: Registro cronológico inverso de operaciones. La última acción realizada se encuentra en la <b>cima (top)</b> de la pila.
+          </div>
+          <div id="pila-historial-empty" class="text-muted hidden" style="padding:24px;text-align:center;">La pila de historial está vacía.</div>
+          <div class="grid grid-2" id="pila-historial-list"></div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1124,11 +1170,128 @@
       }
     }
 
-    function save() { localStorage.setItem(SK, JSON.stringify(S)); }
+    // ─────────────────────────────────────────────
+    // ESTRUCTURAS DINÁMICAS: PILA (LIFO) Y COLA (FIFO)
+    // ─────────────────────────────────────────────
+    class Nodo {
+      constructor(dato) {
+        this.dato = dato;
+        this.siguiente = null;
+      }
+    }
+
+    class Pila {
+      constructor() {
+        this.cima = null;
+        this.tamano = 0;
+      }
+      apilar(dato) {
+        const nuevo = new Nodo(dato);
+        nuevo.siguiente = this.cima;
+        this.cima = nuevo;
+        this.tamano++;
+      }
+      desapilar() {
+        if (this.estaVacia()) return null;
+        const d = this.cima.dato;
+        this.cima = this.cima.siguiente;
+        this.tamano--;
+        return d;
+      }
+      verCima() {
+        return this.estaVacia() ? null : this.cima.dato;
+      }
+      estaVacia() {
+        return this.cima === null;
+      }
+      listar() {
+        const arr = [];
+        let act = this.cima;
+        while (act) {
+          arr.push(act.dato);
+          act = act.siguiente;
+        }
+        return arr;
+      }
+      cargarDesdeArray(arr) {
+        this.cima = null;
+        this.tamano = 0;
+        for (let i = (arr || []).length - 1; i >= 0; i--) {
+          this.apilar(arr[i]);
+        }
+      }
+    }
+
+    class Cola {
+      constructor() {
+        this.frente = null;
+        this.final = null;
+        this.tamano = 0;
+      }
+      encolar(dato) {
+        const nuevo = new Nodo(dato);
+        if (this.estaVacia()) {
+          this.frente = nuevo;
+          this.final = nuevo;
+        } else {
+          this.final.siguiente = nuevo;
+          this.final = nuevo;
+        }
+        this.tamano++;
+      }
+      desencolar() {
+        if (this.estaVacia()) return null;
+        const d = this.frente.dato;
+        this.frente = this.frente.siguiente;
+        if (!this.frente) this.final = null;
+        this.tamano--;
+        return d;
+      }
+      verFrente() {
+        return this.estaVacia() ? null : this.frente.dato;
+      }
+      estaVacia() {
+        return this.frente === null;
+      }
+      listar() {
+        const arr = [];
+        let act = this.frente;
+        while (act) {
+          arr.push(act.dato);
+          act = act.siguiente;
+        }
+        return arr;
+      }
+      cargarDesdeArray(arr) {
+        this.frente = null;
+        this.final = null;
+        this.tamano = 0;
+        for (const it of (arr || [])) {
+          this.encolar(it);
+        }
+      }
+    }
+
+    const pilaHistorial = new Pila();
+    const colaEspera = new Cola();
+
+    function save() {
+      S.pilaHistorial = pilaHistorial.listar();
+      S.colaEspera = colaEspera.listar();
+      localStorage.setItem(SK, JSON.stringify(S));
+    }
     function load() {
       const r = localStorage.getItem(SK);
-      if (r) { try { S = JSON.parse(r); } catch { } }
-      else { DEF.forEach(l => addLibroSilent(l.titulo, l.categoria, l.genero)); save(); }
+      if (r) {
+        try {
+          S = JSON.parse(r);
+          if (S.pilaHistorial) pilaHistorial.cargarDesdeArray(S.pilaHistorial);
+          if (S.colaEspera) colaEspera.cargarDesdeArray(S.colaEspera);
+        } catch { }
+      } else {
+        DEF.forEach(l => addLibroSilent(l.titulo, l.categoria, l.genero));
+        save();
+      }
     }
 
     document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
@@ -1149,8 +1312,17 @@
     }
     function logout() { save(); document.getElementById('app').classList.add('hidden'); document.getElementById('login-screen').style.display = ''; document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = ''; document.getElementById('login-alert').innerHTML = ''; loginIntentos = 3; document.getElementById('btn-login').disabled = false; }
 
-    const VIEWS = ['catalogo', 'prestamo', 'devolucion', 'agregar-libro', 'eliminar-libro', 'eliminar-estudiante'];
-    const TITLES = { catalogo: 'Catalogo de Libros', prestamo: 'Registrar Prestamo', devolucion: 'Devoluciones', 'agregar-libro': 'Agregar Libro', 'eliminar-libro': 'Eliminar Libro', 'eliminar-estudiante': 'Eliminar Estudiante' };
+    const VIEWS = ['catalogo', 'prestamo', 'devolucion', 'agregar-libro', 'eliminar-libro', 'eliminar-estudiante', 'cola-espera', 'pila-historial'];
+    const TITLES = {
+      catalogo: 'Catálogo de Libros',
+      prestamo: 'Registrar Préstamo',
+      devolucion: 'Devoluciones',
+      'agregar-libro': 'Agregar Libro',
+      'eliminar-libro': 'Eliminar Libro',
+      'eliminar-estudiante': 'Eliminar Estudiante',
+      'cola-espera': 'Cola de Reservas y Espera (FIFO)',
+      'pila-historial': 'Pila de Historial Reciente (LIFO)'
+    };
     function showView(v) {
       VIEWS.forEach(x => { document.getElementById('view-' + x).classList.add('hidden'); document.getElementById('nav-' + x).classList.remove('active'); });
       const el = document.getElementById('view-' + v);
@@ -1165,6 +1337,8 @@
       if (v === 'devolucion') rDevolucion();
       if (v === 'eliminar-libro') rElimLib();
       if (v === 'eliminar-estudiante') rElimEst();
+      if (v === 'cola-espera') rColaEspera();
+      if (v === 'pila-historial') rPilaHistorial();
     }
 
     function chips() {
@@ -1272,12 +1446,35 @@
       const est = S.estudiantes.find(x => x.id == idE);
       const lib = S.libros.find(l => l.id === idL);
       if (!est || !lib) { al.innerHTML = ah('error', 'Datos no validos.'); return; }
-      if (!lib.disponible) { al.innerHTML = ah('error', 'El libro ya no esta disponible.'); return; }
+
+      // Integración COLA FIFO: si el libro está prestado, se encola en la lista de reservas
+      if (!lib.disponible) {
+        colaEspera.encolar({
+          idEstudiante: est.id,
+          estudianteNombre: est.nombre,
+          idLibro: lib.id,
+          libroTitulo: lib.titulo,
+          fecha: new Date().toLocaleDateString('es-EC') + ' ' + new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})
+        });
+        save(); chips();
+        al.innerHTML = ah('warning', 'El libro está prestado. El estudiante ' + est.nombre + ' fue añadido a la <b>Cola de Reservas (Turno #' + colaEspera.tamano + ' - FIFO)</b>.');
+        return;
+      }
+
       if (est.multas > 0) { al.innerHTML = ah('error', 'El estudiante tiene multas pendientes: $' + est.multas.toFixed(2)); return; }
       if (est.librosPrestados >= MAX_P) { al.innerHTML = ah('error', 'Limite de prestamos alcanzado.'); return; }
       const hoy = new Date(), vence = new Date(hoy); vence.setDate(vence.getDate() + DIAS);
       const pr = { codigo: S.cP++, idEstudiante: est.id, idLibro: lib.id, fechaSalida: hoy.toISOString(), fechaDevolucion: vence.toISOString() };
-      S.prestamos.push(pr); lib.disponible = false; est.librosPrestados++; save(); chips();
+      S.prestamos.push(pr); lib.disponible = false; est.librosPrestados++;
+
+      // Integración PILA LIFO: apilar acción de préstamo en el historial
+      pilaHistorial.apilar({
+        tipo: 'PRÉSTAMO',
+        detalle: lib.titulo + ' prestado a ' + est.nombre + ' (Cód: #' + pr.codigo + ')',
+        fecha: new Date().toLocaleDateString('es-EC') + ' ' + new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})
+      });
+
+      save(); chips();
       al.innerHTML = ah('success', 'Prestamo registrado. Codigo: #' + pr.codigo + '. Devolver antes del ' + fd(vence) + '.');
       rPrestamo();
     }
@@ -1308,10 +1505,61 @@
       const multa = calcularMultaRecursiva(dias, MULTA);
       if (lib) lib.disponible = true;
       if (est) { est.librosPrestados = Math.max(0, est.librosPrestados - 1); if (at) est.multas += multa; }
-      S.prestamos.splice(idx, 1); save(); chips();
-      al.innerHTML = ah(at ? 'warning' : 'success', at ? 'Devolucion con ' + dias + ' dia(s) de atraso. Multa: $' + multa.toFixed(2) : 'Devolucion exitosa. Sin multas.');
+      S.prestamos.splice(idx, 1);
+
+      // Integración PILA LIFO: apilar acción de devolución en el historial
+      pilaHistorial.apilar({
+        tipo: 'DEVOLUCIÓN',
+        detalle: (lib ? lib.titulo : 'Libro') + ' devuelto por ' + (est ? est.nombre : 'Estudiante') + ' (Cód: #' + p.codigo + ')',
+        fecha: new Date().toLocaleDateString('es-EC') + ' ' + new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})
+      });
+
+      // Integración COLA FIFO: si el estudiante al frente esperaba este libro, atenderlo
+      let infoCola = '';
+      const frenteCola = colaEspera.verFrente();
+      if (frenteCola && lib && frenteCola.idLibro === lib.id) {
+        const atendido = colaEspera.desencolar();
+        infoCola = ' · ⭐ [COLA FIFO] Se notificó a ' + atendido.estudianteNombre + ' que el libro "' + lib.titulo + '" ya está disponible.';
+      }
+
+      save(); chips();
+      al.innerHTML = ah(at ? 'warning' : 'success', (at ? 'Devolucion con ' + dias + ' dia(s) de atraso. Multa: $' + multa.toFixed(2) : 'Devolucion exitosa. Sin multas.') + infoCola);
       rDevolucion();
     }
+
+    function rColaEspera() {
+      const c = document.getElementById('cola-espera-list');
+      const em = document.getElementById('cola-espera-empty');
+      const tbl = document.getElementById('cola-espera-table-wrap');
+      const items = colaEspera.listar();
+      if (!items.length) {
+        tbl.classList.add('hidden');
+        em.classList.remove('hidden');
+        return;
+      }
+      tbl.classList.remove('hidden');
+      em.classList.add('hidden');
+      c.innerHTML = items.map((it, idx) => {
+        return '<tr><td><span class="badge ' + (idx === 0 ? 'badge-amber' : 'badge-blue') + '">' + (idx === 0 ? '⭐ Frente (Turno #1)' : 'Turno #' + (idx + 1)) + '</span></td><td>' + e(it.estudianteNombre) + '</td><td>' + e(it.libroTitulo) + '</td><td>' + it.fecha + '</td><td><span class="badge badge-green">En espera (FIFO)</span></td></tr>';
+      }).join('');
+    }
+
+    function rPilaHistorial() {
+      const c = document.getElementById('pila-historial-list');
+      const em = document.getElementById('pila-historial-empty');
+      const items = pilaHistorial.listar();
+      if (!items.length) {
+        c.innerHTML = '';
+        em.classList.remove('hidden');
+        return;
+      }
+      em.classList.add('hidden');
+      c.innerHTML = items.map((it, idx) => {
+        const esCima = idx === 0;
+        return '<div class="card"><div class="card-header"><div class="card-icon" style="background:' + (it.tipo === 'PRÉSTAMO' ? 'rgba(79,142,247,.15)' : 'rgba(34,197,94,.15)') + '">' + (it.tipo === 'PRÉSTAMO' ? '📤' : '↩️') + '</div><div><div class="card-title">' + e(it.tipo) + '</div><div class="card-meta">' + e(it.detalle) + '</div><div class="card-id">' + it.fecha + '</div></div></div><div class="card-footer"><span class="badge ' + (esCima ? 'badge-green' : 'badge-blue') + '">' + (esCima ? '🔻 CIMA DE LA PILA (Top LIFO)' : 'Nivel ' + (items.length - idx)) + '</span></div></div>';
+      }).join('');
+    }
+
 
     function guardarEstudiante() {
       const nm = document.getElementById('ne-nombre').value.trim();
