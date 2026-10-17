@@ -857,15 +857,15 @@ def seleccionar_estudiante():
 
 
 def seleccionar_libro(estudiante: Estudiante):
-    """Permite elegir un libro disponible y confirmar el préstamo."""
+    """Permite elegir un libro del catálogo (disponible o para reservar en cola) y confirmar."""
     limpiar_pantalla_widgets()
     imprimir_titulo("SELECCIONAR LIBRO")
     print(f"Estudiante: {estudiante.get_persona().get_nombre()}")
 
-    libros_disp = [l for l in datos_sistema["libros"] if l.esta_disponible()]
+    todos_libros = datos_sistema["libros"]
 
-    if not libros_disp:
-        print("\nNo hay libros disponibles en este momento.")
+    if not todos_libros:
+        print("\nNo hay libros registrados en el catálogo.")
         btn_agregar = widgets.Button(description="AGREGAR LIBRO",  button_style="success", layout=widgets.Layout(width="200px"))
         btn_menu    = widgets.Button(description="VOLVER AL MENÚ", button_style="info",    layout=widgets.Layout(width="200px"))
         btn_agregar.on_click(lambda _: [btn_agregar.close(), btn_menu.close(), widget_agregar_libro()])
@@ -873,12 +873,18 @@ def seleccionar_libro(estudiante: Estudiante):
         display(btn_agregar, btn_menu)
         return
 
-    print(f"\nLibros disponibles: {len(libros_disp)}")
-    print("-" * 40)
+    disp_count = sum(1 for l in todos_libros if l.esta_disponible())
+    prest_count = len(todos_libros) - disp_count
+    print(f"\nLibros en catálogo: {len(todos_libros)} ({disp_count} disponibles · {prest_count} prestados)")
+    print("-" * 50)
 
-    opciones    = [(f"{i+1}. {l.get_titulo()} | {l.get_categoria()} | {l.get_genero()}", i) for i, l in enumerate(libros_disp)]
-    dropdown    = widgets.Dropdown(options=opciones, description="Libro:", layout=widgets.Layout(width="580px"))
-    btn_prestar = widgets.Button(description="CONFIRMAR PRÉSTAMO",    button_style="success", layout=widgets.Layout(width="200px"))
+    opciones = []
+    for i, l in enumerate(todos_libros):
+        tag = "🟢 [DISPONIBLE]" if l.esta_disponible() else "⏳ [PRESTADO - COLA FIFO]"
+        opciones.append((f"{i+1}. {tag} {l.get_titulo()} | {l.get_categoria()}", i))
+
+    dropdown    = widgets.Dropdown(options=opciones, description="Libro:", layout=widgets.Layout(width="620px"))
+    btn_prestar = widgets.Button(description="CONFIRMAR ACCIÓN",       button_style="success", layout=widgets.Layout(width="200px"))
     btn_cambiar = widgets.Button(description="ELEGIR OTRO ESTUDIANTE", button_style="warning", layout=widgets.Layout(width="200px"))
     btn_menu    = widgets.Button(description="VOLVER AL MENÚ",         button_style="info",    layout=widgets.Layout(width="200px"))
 
@@ -886,9 +892,35 @@ def seleccionar_libro(estudiante: Estudiante):
         dropdown.close(); btn_prestar.close(); btn_cambiar.close(); btn_menu.close()
 
     def confirmar(_):
-        libro = libros_disp[dropdown.value]
+        libro = todos_libros[dropdown.value]
         _cerrar()
         limpiar_pantalla_widgets()
+
+        # Si el libro NO está disponible, ingresa a la COLA DE RESERVAS (FIFO)
+        if not libro.esta_disponible():
+            imprimir_titulo("RESERVA EN COLA DE ESPERA (FIFO)")
+            datos_sistema["cola_espera"].encolar({
+                "estudiante": estudiante,
+                "libro": libro,
+                "fecha": datetime.now().strftime("%d/%m/%Y %H:%M")
+            })
+            if "pila_historial" in datos_sistema and datos_sistema["pila_historial"] is not None:
+                datos_sistema["pila_historial"].apilar({
+                    "tipo": "RESERVA (COLA FIFO)",
+                    "detalle": f"{estudiante.get_persona().get_nombre()} reservó turno para '{libro.get_titulo()}'",
+                    "fecha": datetime.now().strftime("%d/%m/%Y %H:%M")
+                })
+            print(f"El libro '{libro.get_titulo()}' está actualmente prestado.")
+            print(f"-> Estudiante: {estudiante.get_persona().get_nombre()}")
+            print(f"-> REGISTRADO EN COLA DE ESPERA: Turno #{datos_sistema['cola_espera'].tamano()} (FIFO)")
+            print("-> Al realizarse la devolución del ejemplar, el sistema notificará y atenderá este turno.")
+
+            btn_nuevo = widgets.Button(description="OTRO PRÉSTAMO / RESERVA", button_style="warning", layout=widgets.Layout(width="220px"))
+            btn_m     = widgets.Button(description="VOLVER AL MENÚ",           button_style="info",    layout=widgets.Layout(width="180px"))
+            btn_nuevo.on_click(lambda _2: [btn_nuevo.close(), btn_m.close(), widget_prestamo()])
+            btn_m.on_click(lambda _2: [btn_nuevo.close(), btn_m.close(), mostrar_menu()])
+            display(btn_nuevo, btn_m)
+            return
 
         if not estudiante.puede_prestar():
             imprimir_titulo("PRÉSTAMO RECHAZADO")

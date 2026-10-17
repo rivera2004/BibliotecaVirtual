@@ -967,16 +967,16 @@
             </div>
             <div id="prestamo-info-estudiante"></div>
             <div class="field mt-4">
-              <label>Libro disponible</label>
+              <label>Libro (Disponibles o para Reservar en Cola FIFO)</label>
               <select id="prestamo-libro">
                 <option value="">— Seleccione un libro —</option>
               </select>
             </div>
+            <div id="prestamo-info-libro"></div>
             <hr class="divider" />
             <div class="flex-row">
-              <button class="btn btn-success" onclick="confirmarPrestamo()">&#9989; Confirmar Préstamo</button>
-              <button class="btn btn-ghost" onclick="openModal('modal-nuevo-estudiante')">&#10133; Nuevo
-                Estudiante</button>
+              <button class="btn btn-success" id="btn-confirmar-prestamo" onclick="confirmarPrestamo()">&#9989; Confirmar Préstamo</button>
+              <button class="btn btn-ghost" onclick="openModal('modal-nuevo-estudiante')">&#10133; Nuevo Estudiante</button>
             </div>
           </div>
           <div class="mt-6">
@@ -1035,7 +1035,10 @@
         <div id="view-cola-espera" class="fade-in hidden">
           <div class="section-header">
             <h2 class="section-title">&#128337; Cola de Reservas y Espera</h2>
-            <span class="badge badge-amber">FIFO: First In, First Out</span>
+            <div style="display:flex;gap:10px;align-items:center;margin-left:auto;">
+              <span class="badge badge-amber">FIFO: First In, First Out</span>
+              <button class="btn btn-warning btn-sm" onclick="desencolarFrenteCola()">&#9889; Desencolar Frente (Atender Turno)</button>
+            </div>
           </div>
           <div class="alert alert-info">
             Estructura de Datos <b>Cola (FIFO)</b>: Cuando un libro está prestado, los estudiantes que lo solicitan se encolan automáticamente. Al devolverse el ejemplar, se atiende prioritariamente al primer estudiante de la fila.
@@ -1404,18 +1407,62 @@
       g.innerHTML = libs.map(l => {
         const pr = S.prestamos.find(p => p.idLibro === l.id);
         const est = pr ? S.estudiantes.find(e => e.id === pr.idEstudiante) : null;
-        return '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(79,142,247,.1);font-size:24px">📖</div><div style="flex:1;overflow:hidden"><div class="card-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + e(l.titulo) + '</div><div class="card-meta">' + e(l.categoria) + ' · ' + e(l.genero) + '</div><div class="card-id">' + e(l.id) + '</div></div></div><div class="card-footer"><span class="badge ' + (l.disponible ? 'badge-green' : 'badge-red') + '">' + (l.disponible ? 'Disponible' : 'Prestado') + '</span>' + (est ? '<span class="text-muted" style="font-size:12px">→ ' + e(est.nombre) + '</span>' : '') + (pr ? '<span class="text-muted" style="font-size:11px;margin-left:auto">Dev: ' + fd(pr.fechaDevolucion) + '</span>' : '') + '</div></div>';
+        const btnAccion = l.disponible
+          ? '<button class="btn btn-primary btn-sm ml-auto" onclick="solicitarDesdeCatalogo(\'' + l.id + '\')">⚡ Prestar</button>'
+          : '<button class="btn btn-warning btn-sm ml-auto" onclick="solicitarDesdeCatalogo(\'' + l.id + '\')">⏳ Reservar (Cola FIFO)</button>';
+        return '<div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(79,142,247,.1);font-size:24px">📖</div><div style="flex:1;overflow:hidden"><div class="card-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + e(l.titulo) + '</div><div class="card-meta">' + e(l.categoria) + ' · ' + e(l.genero) + '</div><div class="card-id">' + e(l.id) + '</div></div></div><div class="card-footer"><span class="badge ' + (l.disponible ? 'badge-green' : 'badge-red') + '">' + (l.disponible ? 'Disponible' : 'Prestado') + '</span>' + (est ? '<span class="text-muted" style="font-size:12px">→ ' + e(est.nombre) + '</span>' : '') + btnAccion + '</div></div>';
       }).join('');
     }
     function sc(ico, clr, bg, val, lbl) { return '<div class="stat-card"><div class="stat-card-icon" style="background:' + bg + ';color:' + clr + '">' + ico + '</div><div><div class="stat-card-val">' + val + '</div><div class="stat-card-label">' + lbl + '</div></div></div>'; }
 
-    function rPrestamo() {
+    function solicitarDesdeCatalogo(idLibro) {
+      showView('prestamo');
+      rPrestamo(idLibro);
+    }
+
+    function rPrestamo(idLibroPreseleccionado = null) {
       const sE = document.getElementById('prestamo-estudiante'), sL = document.getElementById('prestamo-libro');
       document.getElementById('prestamo-alert').innerHTML = '';
       sE.innerHTML = '<option value="">— Seleccione un estudiante —</option>';
       S.estudiantes.forEach(x => { const o = document.createElement('option'); o.value = x.id; o.textContent = x.nombre + ' (Mat: ' + x.matricula + ') – ' + x.librosPrestados + '/' + MAX_P; sE.appendChild(o); });
-      sL.innerHTML = '<option value="">— Seleccione un libro disponible —</option>';
-      S.libros.filter(l => l.disponible).forEach(l => { const o = document.createElement('option'); o.value = l.id; o.textContent = l.titulo + ' | ' + l.categoria; sL.appendChild(o); });
+
+      // IMPORTANTE: Mostrar TODOS los libros del catálogo (disponibles o para reserva en cola FIFO)
+      sL.innerHTML = '<option value="">— Seleccione un libro del catálogo —</option>';
+      S.libros.forEach(l => {
+        const o = document.createElement('option');
+        o.value = l.id;
+        if (l.disponible) {
+          o.textContent = '🟢 ' + l.titulo + ' | ' + l.categoria + ' (Disponible)';
+        } else {
+          o.textContent = '⏳ ' + l.titulo + ' | ' + l.categoria + ' (Prestado — Cola FIFO)';
+        }
+        sL.appendChild(o);
+      });
+
+      if (idLibroPreseleccionado) {
+        sL.value = idLibroPreseleccionado;
+      }
+
+      sL.onchange = () => {
+        const lib = S.libros.find(l => l.id === sL.value);
+        const infLib = document.getElementById('prestamo-info-libro');
+        const btnConf = document.getElementById('btn-confirmar-prestamo');
+        if (!lib) {
+          if (infLib) infLib.innerHTML = '';
+          if (btnConf) { btnConf.innerHTML = '&#9989; Confirmar Préstamo'; btnConf.className = 'btn btn-success'; }
+          return;
+        }
+        if (lib.disponible) {
+          if (infLib) infLib.innerHTML = '<div class="alert alert-success" style="margin-top:8px;margin-bottom:0">🟢 <b>Ejemplar disponible:</b> Entrega inmediata para préstamo.</div>';
+          if (btnConf) { btnConf.innerHTML = '&#9989; Confirmar Préstamo'; btnConf.className = 'btn btn-success'; }
+        } else {
+          const posCola = colaEspera.listar().filter(it => it.idLibro === lib.id).length + 1;
+          if (infLib) infLib.innerHTML = '<div class="alert alert-warning" style="margin-top:8px;margin-bottom:0">⏳ <b>Libro actualmente prestado:</b> Al confirmar, el estudiante entrará a la <b>Cola de Reservas (Turno #' + posCola + ' - FIFO)</b> y será notificado al devolverse el ejemplar.</div>';
+          if (btnConf) { btnConf.innerHTML = '&#128337; Reservar en Cola (Turno #' + posCola + ' - FIFO)'; btnConf.className = 'btn btn-warning'; }
+        }
+      };
+      sL.onchange();
+
       sE.onchange = () => {
         const est = S.estudiantes.find(x => x.id == sE.value);
         const inf = document.getElementById('prestamo-info-estudiante');
@@ -1449,6 +1496,12 @@
 
       // Integración COLA FIFO: si el libro está prestado, se encola en la lista de reservas
       if (!lib.disponible) {
+        const yaEnCola = colaEspera.listar().some(item => item.idEstudiante === est.id && item.idLibro === lib.id);
+        if (yaEnCola) {
+          al.innerHTML = ah('warning', 'El estudiante <b>' + est.nombre + '</b> ya tiene una reserva activa en la cola para este libro.');
+          return;
+        }
+
         colaEspera.encolar({
           idEstudiante: est.id,
           estudianteNombre: est.nombre,
@@ -1456,8 +1509,17 @@
           libroTitulo: lib.titulo,
           fecha: new Date().toLocaleDateString('es-EC') + ' ' + new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})
         });
+
+        // Integración PILA LIFO: apilar acción de reserva
+        pilaHistorial.apilar({
+          tipo: 'RESERVA (COLA FIFO)',
+          detalle: est.nombre + ' reservó turno para el libro prestado: ' + lib.titulo,
+          fecha: new Date().toLocaleDateString('es-EC') + ' ' + new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})
+        });
+
         save(); chips();
-        al.innerHTML = ah('warning', 'El libro está prestado. El estudiante ' + est.nombre + ' fue añadido a la <b>Cola de Reservas (Turno #' + colaEspera.tamano + ' - FIFO)</b>.');
+        al.innerHTML = ah('warning', '¡Reserva exitosa! Como el libro está prestado, <b>' + est.nombre + '</b> fue agregado a la <b>Cola de Reservas (Turno #' + colaEspera.tamano + ' - FIFO)</b>.');
+        rPrestamo(lib.id);
         return;
       }
 
@@ -1476,7 +1538,7 @@
 
       save(); chips();
       al.innerHTML = ah('success', 'Prestamo registrado. Codigo: #' + pr.codigo + '. Devolver antes del ' + fd(vence) + '.');
-      rPrestamo();
+      rPrestamo(lib.id);
     }
 
     function rDevolucion() {
@@ -1542,6 +1604,20 @@
       c.innerHTML = items.map((it, idx) => {
         return '<tr><td><span class="badge ' + (idx === 0 ? 'badge-amber' : 'badge-blue') + '">' + (idx === 0 ? '⭐ Frente (Turno #1)' : 'Turno #' + (idx + 1)) + '</span></td><td>' + e(it.estudianteNombre) + '</td><td>' + e(it.libroTitulo) + '</td><td>' + it.fecha + '</td><td><span class="badge badge-green">En espera (FIFO)</span></td></tr>';
       }).join('');
+    }
+
+    function desencolarFrenteCola() {
+      if (colaEspera.estaVacia()) {
+        alert('La cola de reservas está vacía actualmente.');
+        return;
+      }
+      const atendido = colaEspera.desencolar();
+      pilaHistorial.apilar({
+        tipo: 'DESENCOLAR (COLA FIFO)',
+        detalle: 'Turno atendido: ' + atendido.estudianteNombre + ' para el libro "' + atendido.libroTitulo + '"',
+        fecha: new Date().toLocaleDateString('es-EC') + ' ' + new Date().toLocaleTimeString('es-EC', {hour:'2-digit',minute:'2-digit'})
+      });
+      save(); chips(); rColaEspera();
     }
 
     function rPilaHistorial() {
