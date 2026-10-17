@@ -136,6 +136,53 @@ def contar_libros_disponibles_recursivo(libros: list, indice: int = 0) -> int:
 
 
 # ─────────────────────────────────────────────
+# ALGORITMOS DE ORDENAMIENTO (ESTRUCTURA DE DATOS)
+# ─────────────────────────────────────────────
+
+def quicksort_libros_por_titulo(libros: list) -> list:
+    """
+    Ordena una lista de libros alfabéticamente por título mediante QuickSort.
+    - Estrategia: Divide y Vencerás (Divide and Conquer).
+    - Complejidad temporal: O(n log n) promedio, O(n^2) peor caso.
+    - Complejidad espacial: O(log n) en llamadas recursivas.
+    - Caso base: Listas con 0 o 1 elemento ya están ordenadas.
+    - Paso recursivo: Se escoge un pivote y se ordenan recursivamente menores y mayores.
+    """
+    if len(libros) <= 1:
+        return libros.copy()
+
+    pivote = libros[len(libros) // 2].get_titulo().strip().lower()
+    menores = [l for l in libros if l.get_titulo().strip().lower() < pivote]
+    iguales = [l for l in libros if l.get_titulo().strip().lower() == pivote]
+    mayores = [l for l in libros if l.get_titulo().strip().lower() > pivote]
+
+    return quicksort_libros_por_titulo(menores) + iguales + quicksort_libros_por_titulo(mayores)
+
+
+def quicksort_libros_por_categoria(libros: list) -> list:
+    """Ordena los libros por categoría alfabéticamente mediante QuickSort."""
+    if len(libros) <= 1:
+        return libros.copy()
+
+    pivote = libros[len(libros) // 2].get_categoria().strip().lower()
+    menores = [l for l in libros if l.get_categoria().strip().lower() < pivote]
+    iguales = [l for l in libros if l.get_categoria().strip().lower() == pivote]
+    mayores = [l for l in libros if l.get_categoria().strip().lower() > pivote]
+
+    return quicksort_libros_por_categoria(menores) + iguales + quicksort_libros_por_categoria(mayores)
+
+
+def buscar_libro_catalogo(libros: list, titulo_buscar: str):
+    """
+    Integración didáctica de Ordenamiento + Búsqueda:
+    1. Ordena la lista con QuickSort O(n log n).
+    2. Aplica Búsqueda Binaria Recursiva O(log n) sobre la colección ordenada.
+    """
+    libros_ordenados = quicksort_libros_por_titulo(libros)
+    return busqueda_binaria_libro_recursiva(libros_ordenados, titulo_buscar, 0, len(libros_ordenados) - 1)
+
+
+# ─────────────────────────────────────────────
 # DOMINIO: CLASES DEL MODELO
 # ─────────────────────────────────────────────
 
@@ -760,19 +807,54 @@ def widget_devolucion():
 # ─────────────────────────────────────────────
 
 def widget_catalogo():
-    """Muestra todos los libros del catálogo con su estado."""
+    """Muestra todos los libros del catálogo ordenados con QuickSort y permite búsqueda binaria."""
     limpiar_pantalla_widgets()
-    imprimir_titulo("CATÁLOGO DE LIBROS")
+    imprimir_titulo("CATÁLOGO DE LIBROS (ORDENADO CON QUICKSORT)")
 
-    libros = datos_sistema["libros"]
-    if not libros:
+    libros_ordenados = quicksort_libros_por_titulo(datos_sistema["libros"])
+    total_disponibles = contar_libros_disponibles_recursivo(libros_ordenados)
+
+    print(f"Total de libros: {len(libros_ordenados)} | Disponibles: {total_disponibles}\n")
+
+    if not libros_ordenados:
         print("El catálogo está vacío.")
     else:
-        for i, libro in enumerate(libros, start=1):
-            print(f"\n___ Libro #{i} ___")
+        for i, libro in enumerate(libros_ordenados, start=1):
+            print(f"___ Libro #{i} ___")
             print(libro.mostrar_info())
+            print()
 
-    _btn_volver_simple()
+    campo_busqueda = widgets.Text(placeholder="Ej: Clean Code", description="Buscar título:", layout=widgets.Layout(width="380px"))
+    btn_buscar     = widgets.Button(description="BÚSQUEDA BINARIA", button_style="primary", layout=widgets.Layout(width="180px"))
+    btn_volver     = widgets.Button(description="VOLVER AL MENÚ",   button_style="info",    layout=widgets.Layout(width="160px"))
+    salida         = widgets.Output()
+
+    def buscar(_):
+        with salida:
+            clear_output(wait=True)
+            termino = campo_busqueda.value.strip()
+            if not termino:
+                print("Por favor, ingrese un título a buscar.")
+                return
+
+            # Ejecución de Búsqueda Binaria Recursiva O(log n)
+            resultado = busqueda_binaria_libro_recursiva(libros_ordenados, termino, 0, len(libros_ordenados) - 1)
+            if resultado:
+                print(f"\n[ÉXITO] Libro encontrado mediante Búsqueda Binaria:")
+                print(resultado.mostrar_info())
+            else:
+                print(f"\n[NO ENCONTRADO] No se encontró ningún libro con el título exacto '{termino}'.")
+
+    def volver(_):
+        campo_busqueda.close()
+        btn_buscar.close()
+        btn_volver.close()
+        salida.close()
+        mostrar_menu()
+
+    btn_buscar.on_click(buscar)
+    btn_volver.on_click(volver)
+    display(widgets.HBox([campo_busqueda, btn_buscar, btn_volver]), salida)
 
 
 # ─────────────────────────────────────────────

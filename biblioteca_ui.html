@@ -923,6 +923,26 @@
             <span class="section-sub" id="catalogo-count"></span>
           </div>
           <div class="stats-row" id="catalogo-stats"></div>
+
+          <!-- Barra de Búsqueda y Ordenamiento (Estructura de Datos) -->
+          <div class="card" style="margin-bottom:20px;padding:16px 20px;">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <div style="flex:1;min-width:240px;">
+                <input id="catalogo-buscar" type="text" placeholder="🔍 Buscar libro por título (Búsqueda Binaria)..." oninput="rCatalogo()" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:13.5px;outline:none;" />
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;">ORDENAR:</label>
+                <select id="catalogo-orden" onchange="rCatalogo()" style="padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+                  <option value="titulo-az">Título: A-Z (QuickSort)</option>
+                  <option value="titulo-za">Título: Z-A (QuickSort)</option>
+                  <option value="categoria">Categoría (QuickSort)</option>
+                  <option value="disponible">Disponibilidad</option>
+                </select>
+              </div>
+              <span id="catalogo-badge-algo" class="badge badge-blue">⚡ QuickSort Activo</span>
+            </div>
+          </div>
+
           <div class="grid grid-3" id="catalogo-grid"></div>
         </div>
 
@@ -1078,6 +1098,32 @@
       return buscarLibroBinarioRecursivo(librosOrdenados, titulo, medio + 1, fin);
     }
 
+    // ─────────────────────────────────────────────
+    // ALGORITMOS DE ORDENAMIENTO (QUICKSORT)
+    // ─────────────────────────────────────────────
+    function quicksortLibros(lista, criterio = 'titulo', asc = true) {
+      if (lista.length <= 1) return [...lista];
+      const medioIdx = Math.floor(lista.length / 2);
+      const pivoteVal = (lista[medioIdx][criterio] || '').toString().toLowerCase();
+
+      const menores = [];
+      const iguales = [];
+      const mayores = [];
+
+      for (const item of lista) {
+        const val = (item[criterio] || '').toString().toLowerCase();
+        if (val < pivoteVal) menores.push(item);
+        else if (val > pivoteVal) mayores.push(item);
+        else iguales.push(item);
+      }
+
+      if (asc) {
+        return [...quicksortLibros(menores, criterio, true), ...iguales, ...quicksortLibros(mayores, criterio, true)];
+      } else {
+        return [...quicksortLibros(mayores, criterio, false), ...iguales, ...quicksortLibros(menores, criterio, false)];
+      }
+    }
+
     function save() { localStorage.setItem(SK, JSON.stringify(S)); }
     function load() {
       const r = localStorage.getItem(SK);
@@ -1130,16 +1176,57 @@
     }
 
     function rCatalogo() {
-      const libs = S.libros, d = contarDisponiblesRecursivo(libs);
+      const q = (document.getElementById('catalogo-buscar')?.value || '').trim().toLowerCase();
+      const orden = document.getElementById('catalogo-orden')?.value || 'titulo-az';
+
+      let libs = [...S.libros];
+      const badgeAlgo = document.getElementById('catalogo-badge-algo');
+
+      // 1. Algoritmo de Ordenamiento QuickSort
+      if (orden === 'titulo-az') {
+        libs = quicksortLibros(libs, 'titulo', true);
+        if (badgeAlgo) badgeAlgo.textContent = '⚡ QuickSort (A-Z)';
+      } else if (orden === 'titulo-za') {
+        libs = quicksortLibros(libs, 'titulo', false);
+        if (badgeAlgo) badgeAlgo.textContent = '⚡ QuickSort (Z-A)';
+      } else if (orden === 'categoria') {
+        libs = quicksortLibros(libs, 'categoria', true);
+        if (badgeAlgo) badgeAlgo.textContent = '⚡ QuickSort (Categoría)';
+      } else if (orden === 'disponible') {
+        libs.sort((a, b) => (b.disponible ? 1 : 0) - (a.disponible ? 1 : 0));
+        if (badgeAlgo) badgeAlgo.textContent = '⚡ Filtro Disponibilidad';
+      }
+
+      // 2. Algoritmo de Búsqueda Binaria / Lineal
+      if (q) {
+        // Demostración didáctica: lista ordenada con QuickSort requerida para búsqueda binaria
+        const listaOrdenadaBinaria = quicksortLibros(S.libros, 'titulo', true);
+        const libroExacto = buscarLibroBinarioRecursivo(listaOrdenadaBinaria, q, 0, listaOrdenadaBinaria.length - 1);
+
+        if (libroExacto) {
+          libs = [libroExacto];
+          if (badgeAlgo) badgeAlgo.textContent = '🎯 Búsqueda Binaria O(log n)';
+        } else {
+          // Búsqueda lineal / parcial por coincidencia de texto
+          libs = libs.filter(l => l.titulo.toLowerCase().includes(q) || l.categoria.toLowerCase().includes(q) || l.genero.toLowerCase().includes(q));
+          if (badgeAlgo) badgeAlgo.textContent = '🔍 Búsqueda Lineal O(n)';
+        }
+      }
+
+      const d = contarDisponiblesRecursivo(libs);
       document.getElementById('catalogo-count').textContent = libs.length + ' libro' + (libs.length !== 1 ? 's' : '') + ' · ' + d + ' disponible' + (d !== 1 ? 's' : '');
       document.getElementById('catalogo-stats').innerHTML =
-        sc('📚', 'var(--accent)', 'rgba(79,142,247,.12)', libs.length, 'Total libros') +
-        sc('✅', 'var(--green)', 'rgba(34,197,94,.12)', d, 'Disponibles') +
-        sc('📤', 'var(--red)', 'rgba(239,68,68,.12)', libs.length - d, 'Prestados') +
+        sc('📚', 'var(--accent)', 'rgba(79,142,247,.12)', S.libros.length, 'Total libros') +
+        sc('✅', 'var(--green)', 'rgba(34,197,94,.12)', contarDisponiblesRecursivo(S.libros), 'Disponibles') +
+        sc('📤', 'var(--red)', 'rgba(239,68,68,.12)', S.libros.length - contarDisponiblesRecursivo(S.libros), 'Prestados') +
         sc('🎓', 'var(--amber)', 'rgba(245,158,11,.12)', S.estudiantes.length, 'Estudiantes') +
         sc('🔄', 'var(--accent2)', 'rgba(124,58,237,.12)', S.prestamos.length, 'Prestamos activos');
+
       const g = document.getElementById('catalogo-grid');
-      if (!libs.length) { g.innerHTML = '<div class="text-muted">El catalogo esta vacio.</div>'; return; }
+      if (!libs.length) {
+        g.innerHTML = '<div class="text-muted" style="grid-column:1/-1;padding:32px;text-align:center;">No se encontraron libros que coincidan con la búsqueda.</div>';
+        return;
+      }
       g.innerHTML = libs.map(l => {
         const pr = S.prestamos.find(p => p.idLibro === l.id);
         const est = pr ? S.estudiantes.find(e => e.id === pr.idEstudiante) : null;
