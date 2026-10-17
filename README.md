@@ -8,15 +8,22 @@
 
 ## 📖 Descripción del proyecto
 
-BibliotecaVirtual es un sistema integral de gestión de biblioteca digital diseñado para administrar catálogos bibliográficos, gestionar préstamos y devoluciones, procesar reservas en espera y llevar un historial detallado de transacciones.
+BibliotecaVirtual es un sistema de gestión de biblioteca digital diseñado para administrar el catálogo de libros, gestionar préstamos y devoluciones, calcular multas, registrar reservas en espera y mantener un historial de las operaciones realizadas.
 
-El proyecto implementa de manera práctica los conceptos fundamentales de la materia **Estructura de Datos**:
-- **Estructuras de Datos Lineales Dinámicas:** Pilas (Stacks - LIFO) y Colas (Queues - FIFO) implementadas mediante Nodos Enlazados.
-- **Algoritmos de Ordenamiento:** QuickSort recursivo (por título y por categoría).
-- **Algoritmos de Búsqueda:** Búsqueda Binaria recursiva ($O(\log n)$) y Búsqueda Lineal recursiva.
-- **Algoritmos Recursivos:** Cálculo acumulativo de multas y conteo de ejemplares disponibles.
+El proyecto aplica conceptos fundamentales de **Estructura de Datos**, mediante la implementación de estructuras dinámicas enlazadas y algoritmos de ordenamiento, búsqueda y recursividad.
 
-Todas las estructuras y algoritmos están construidos desde cero tanto en el backend en **Python** como en la interfaz interactiva web en **JavaScript**.
+Sus principales funcionalidades son:
+
+- 📚 Administración y consulta del catálogo de libros.
+- 🔍 Búsqueda de libros por título.
+- 🔃 Ordenamiento por título y categoría.
+- 📖 Registro y gestión de préstamos y devoluciones.
+- 💰 Cálculo recursivo de multas por retraso.
+- ⏳ Gestión de reservas mediante una cola de espera FIFO.
+- 📋 Historial de transacciones mediante una pila LIFO.
+- 📊 Consulta y actualización de la disponibilidad de ejemplares.
+
+Las estructuras de datos y los algoritmos se implementan tanto en el backend con Python como en la interfaz web con JavaScript.
 
 ---
 
@@ -24,10 +31,11 @@ Todas las estructuras y algoritmos están construidos desde cero tanto en el bac
 
 | Tecnología | Aplicación |
 |---|---|
-| **Python 3.x** | Lógica central del sistema, estructuras dinámicas enlazadas y algoritmos de consola. |
-| **HTML5 / CSS3** | Estructura y diseño premium con Glassmorphism y modo oscuro. |
-| **JavaScript (ES6+)** | Interactividad reactiva, estructuras `Nodo`, `Pila`, `Cola` y algoritmos en el cliente. |
-| **Markdown** | Documentación técnica y académica del proyecto. |
+| Python 3.x | Lógica central del sistema, estructuras dinámicas y algoritmos. |
+| HTML5 | Estructura de la interfaz web. |
+| CSS3 | Diseño visual, modo oscuro y efectos de interfaz. |
+| JavaScript ES6+ | Interactividad, estructuras enlazadas y algoritmos en el navegador. |
+| Markdown | Documentación técnica y académica. |
 
 ---
 
@@ -35,153 +43,349 @@ Todas las estructuras y algoritmos están construidos desde cero tanto en el bac
 
 | Archivo | Descripción |
 |---|---|
-| [`biblioteca.py`](file:///c:/Users/marcos/Desktop/3semestre/estrectutra/1hemi/biblioteca.py) | Lógica del sistema, clases `Nodo`, `Pila`, `Cola`, algoritmos recursivos y widgets interactivos. |
-| [`biblioteca_ui.html`](file:///c:/Users/marcos/Desktop/3semestre/estrectutra/1hemi/biblioteca_ui.html) | Dashboard web interactivo con vistas de catálogo, préstamos, cola FIFO e historial LIFO. |
-| [`abrir_interfaz.py`](file:///c:/Users/marcos/Desktop/3semestre/estrectutra/1hemi/abrir_interfaz.py) | Script lanzador que abre automáticamente la interfaz web en el navegador predeterminado. |
-| [`README.md`](file:///c:/Users/marcos/Desktop/3semestre/estrectutra/1hemi/README.md) | Documentación académica y técnica completa del proyecto. |
+| `biblioteca.py` | Lógica del sistema, clases `Nodo`, `Pila` y `Cola`, algoritmos recursivos y operaciones de biblioteca. |
+| `biblioteca_ui.html` | Interfaz web interactiva con catálogo, préstamos, reservas, historial y estadísticas. |
+| `abrir_interfaz.py` | Script encargado de abrir la interfaz web en el navegador predeterminado. |
+| `README.md` | Documentación técnica y académica del proyecto. |
 
 ---
 
-## 🔐 Credenciales de Acceso Administrativo
+# 🧱 1. Estructuras de datos lineales dinámicas
 
-El acceso administrativo al panel web o al menú de configuración utiliza:
-- **Usuario:** `admin`
-- **Contraseña:** `123`
+Las estructuras lineales permiten organizar y administrar información siguiendo un orden determinado. En este proyecto se implementan mediante **nodos enlazados**, construidos desde cero, en lugar de depender exclusivamente de las estructuras nativas de Python o JavaScript.
 
----
+## 1.1. Nodo (`Nodo`)
 
-# 🧱 Estructuras de Datos Lineales Implementadas
+El nodo es el componente básico de las estructuras enlazadas. Almacena un dato y una referencia al siguiente nodo.
 
-Las estructuras lineales dinámicas se implementaron utilizando **Nodos Enlazados** para garantizar inserciones y eliminaciones en tiempo constante $O(1)$ sin depender de estructuras nativas estáticas.
+Cada nodo contiene:
 
-```
-       [Nodo: dato | siguiente] ---> [Nodo: dato | siguiente] ---> None
-```
+- `dato`: información almacenada.
+- `siguiente`: referencia al próximo nodo o `None` cuando no existe otro.
 
-### 1. `Nodo`
-- **Atributos:** `dato` (información almacenada) y `siguiente` (puntero al próximo nodo o `None`).
+Representación de una lista enlazada:
 
----
-
-### 2. Pila (Stack — LIFO: *Last In, First Out*)
-
-En una **Pila**, el último elemento en ingresar es el primero en salir.
-
-```
-       CIMA (TOP) ---> [ Transacción C ]
-                       [ Transacción B ]
-                       [ Transacción A ] ---> BASE (None)
+```text
+[Nodo: dato | siguiente] → [Nodo: dato | siguiente] → None
 ```
 
-- **Operaciones implementadas:**
-  - `apilar(elemento)` (*Push*): Inserta un nuevo nodo en la cima de la pila en tiempo $O(1)$.
-  - `desapilar()` (*Pop*): Retira y devuelve el nodo ubicado en la cima en tiempo $O(1)$. Retorna `None` si la pila está vacía.
-  - `ver_cima()` (*Peek*): Consulta el dato de la cima sin extraerlo en tiempo $O(1)$.
-  - `esta_vacia()`: Retorna `True` si la cima es `None`.
-  - `tamano()`: Retorna la cantidad actual de nodos.
-  - `listar_elementos()`: Recorre la pila desde la cima hasta la base para visualización.
-- **Caso de uso en el sistema:**
-  - **Historial de Transacciones Recientes:** Cada préstamo, devolución o reserva se apila en la cima. Permite auditar de inmediato la actividad más reciente y sienta las bases para funciones de desapilado ("Deshacer / Undo").
+Los nodos permiten construir estructuras dinámicas cuyo tamaño puede cambiar durante la ejecución.
 
----
+## 1.2. Pila (`Pila`) — LIFO
 
-### 3. Cola (Queue — FIFO: *First In, First Out*)
+Una pila sigue el principio **LIFO (Last In, First Out)**: el último elemento en entrar es el primero en salir.
 
-En una **Cola**, el primer elemento en ingresar es el primero en ser atendido.
+Representación:
 
-```
-FRENTE (FRONT)                                                    FINAL (REAR)
-[ Solicitud 1 ] ---> [ Solicitud 2 ] ---> [ Solicitud 3 ] ---> [ Solicitud 4 ]
+```text
+        CIMA (TOP)
+             ↓
+      [Transacción C]
+      [Transacción B]
+      [Transacción A]
+             ↓
+        BASE (None)
 ```
 
-- **Operaciones implementadas:**
-  - `encolar(elemento)` (*Enqueue*): Añade un elemento al final de la cola en tiempo $O(1)$ manteniendo el puntero `final`.
-  - `desencolar()` (*Dequeue*): Extrae y retorna el elemento del frente de la cola en tiempo $O(1)$. Si la cola queda vacía, actualiza `final = None`.
-  - `ver_frente()` (*Peek*): Consulta el elemento en espera en el frente sin retirarlo en tiempo $O(1)$.
-  - `esta_vacia()`: Retorna `True` si `frente` es `None`.
-  - `tamano()`: Retorna el número de solicitudes en espera.
-  - `listar_elementos()`: Retorna la lista ordenada de solicitudes en espera para renderizado.
-- **Caso de uso en el sistema:**
-  - **Cola de Espera y Reservas:** Cuando un estudiante solicita un libro que no tiene ejemplares disponibles, su solicitud ingresa automáticamente a la cola FIFO. Tan pronto como otro usuario devuelve un ejemplar del libro, el sistema atiende y desencola automáticamente al primer usuario en espera.
+### Operaciones implementadas
+
+| Operación | Método | Función |
+|---|---|---|
+| Insertar | `apilar(elemento)` | Agrega un elemento en la cima. |
+| Extraer | `desapilar()` | Retira y devuelve el elemento de la cima. |
+| Consultar | `ver_cima()` | Consulta el elemento superior sin retirarlo. |
+| Verificar | `esta_vacia()` | Comprueba si la pila está vacía. |
+| Contar | `tamano()` | Devuelve la cantidad de elementos. |
+| Recorrer | `listar_elementos()` | Obtiene los elementos para su visualización. |
+
+Las operaciones de inserción y extracción en la cima tienen una complejidad temporal de \(O(1)\).
+
+### Aplicación en BibliotecaVirtual
+
+La pila almacena el historial de transacciones recientes, como préstamos, devoluciones y reservas. Esto permite consultar primero las operaciones más recientes y visualizar la actividad del sistema.
+
+## 1.3. Cola (`Cola`) — FIFO
+
+Una cola sigue el principio **FIFO (First In, First Out)**: el primer elemento en entrar es el primero en salir.
+
+Representación:
+
+```text
+FRENTE                                      FINAL
+   ↓                                           ↓
+[Solicitud 1] → [Solicitud 2] → [Solicitud 3]
+```
+
+### Operaciones implementadas
+
+| Operación | Método | Función |
+|---|---|---|
+| Insertar | `encolar(elemento)` | Agrega una solicitud al final. |
+| Extraer | `desencolar()` | Retira y devuelve la primera solicitud. |
+| Consultar | `ver_frente()` | Consulta la primera solicitud sin retirarla. |
+| Verificar | `esta_vacia()` | Comprueba si la cola está vacía. |
+| Contar | `tamano()` | Devuelve el número de solicitudes. |
+| Recorrer | `listar_elementos()` | Obtiene las solicitudes para su visualización. |
+
+Las operaciones de inserción y extracción tienen una complejidad temporal de \(O(1)\) cuando se mantienen las referencias al frente y al final de la cola.
+
+### Aplicación en BibliotecaVirtual
+
+La cola administra las reservas de libros que no tienen ejemplares disponibles. Cuando un libro se devuelve, el sistema puede atender al primer usuario en espera y retirar su solicitud de la cola.
 
 ---
 
-# 🔄 Algoritmos Implementados
+# ⚡ 2. Algoritmos de ordenamiento
 
-## ⚡ 1. Algoritmos de ordenamiento
+Los algoritmos de ordenamiento permiten organizar los libros según distintos criterios, facilitando su consulta y preparando los datos para la búsqueda binaria.
 
-### 1.1. `quicksort_libros_por_titulo(libros)`
-- **Técnica:** *Divide y Vencerás* (Divide and Conquer) recursivo.
-- **Complejidad:** $O(n \log n)$ promedio, $O(n^2)$ peor caso.
-- **Caso base:** Si la lista tiene $\le 1$ elementos, se retorna tal cual.
-- **Paso recursivo:** Selecciona un pivote, particiona en `menores`, `iguales` y `mayores`, y concatena:
-  $$\text{QuickSort}(\text{menores}) + \text{iguales} + \text{QuickSort}(\text{mayores})$$
-- **Uso:** Ordena el catálogo alfabéticamente para visualización y como requisito previo para la búsqueda binaria.
+## 2.1. `quicksort_libros_por_titulo(libros)`
 
-### 1.2. `quicksort_libros_por_categoria(libros)`
-- Aplica el principio de QuickSort organizando los libros por género/categoría bibliográfica de forma recursiva.
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 141
 
----
+Ordena los libros alfabéticamente por título mediante el algoritmo **QuickSort**, basado en la técnica *Divide y Vencerás* (*Divide and Conquer*).
 
-## 🔍 2. Algoritmos de búsqueda
+- **Estrategia:** selecciona un pivote y divide los elementos en menores, iguales y mayores.
+- **Caso base:** si la lista tiene cero o un elemento, ya está ordenada.
+- **Paso recursivo:** ordena las sublistas menores y mayores, y las combina con los elementos iguales.
+- **Uso:** organiza el catálogo y permite preparar los datos para la búsqueda binaria.
 
-### 2.1. `busqueda_binaria_libro_recursiva(libros, titulo_buscar, inicio, fin)`
-- **Complejidad:** $O(\log n)$.
-- **Requisito:** Catálogo ordenado alfabéticamente previamente.
-- **Caso base 1:** Si `inicio > fin`, el libro no existe en el catálogo (retorna `None`).
-- **Caso base 2:** Si el libro en `medio = (inicio + fin) // 2` coincide con el título buscado, retorna la instancia del libro.
-- **Paso recursivo:** Si el título buscado es alfabéticamente menor, busca en el subsegmento izquierdo `[inicio, medio - 1]`; si es mayor, busca en el derecho `[medio + 1, fin]`.
+### Complejidad
 
-### 2.2. `buscar_libro_catalogo(libros, titulo_buscar)`
-- Orquesta el ordenamiento QuickSort y la búsqueda binaria recursiva en una sola operación optimizada.
+| Caso | Complejidad temporal |
+|---|---:|
+| Promedio | \(O(n \log n)\) |
+| Peor caso | \(O(n^2)\) |
 
-### 2.3. `buscar_prestamo_recursivo(prestamos, codigo, indice)`
-- Búsqueda lineal recursiva con paso `indice + 1` y casos base de fin de lista o coincidencia de código de préstamo.
+El consumo de memoria depende de la implementación. Si se crean sublistas, puede ser mayor que el de una versión que ordena directamente sobre la lista original.
 
----
+## 2.2. `quicksort_libros_por_categoria(libros)`
 
-## 🔁 3. Algoritmos recursivos adicionales
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 162
 
-### 3.1. `calcular_multa_recursiva(dias_retraso, tarifa_por_semana)`
-- Calcula la sanción acumulada sumando la tarifa por cada período de retraso de forma recursiva.
-- **Caso base:** Si `dias_retraso <= 0`, retorna `0.0`.
-- **Paso recursivo:** `tarifa_por_semana + calcular_multa_recursiva(dias_retraso - 7, tarifa_por_semana)`.
+Ordena los libros por categoría mediante el mismo principio recursivo de QuickSort.
 
-### 3.2. `contar_libros_disponibles_recursivo(libros, indice)`
-- Recorre la lista de libros de forma recursiva sumando `1` si el libro está disponible o `0` si está agotado.
-- **Caso base:** Si `indice >= len(libros)`, retorna `0`.
+- **Objetivo:** organizar el catálogo por género o categoría bibliográfica.
+- **Funcionamiento:** divide los elementos según el criterio de comparación y ordena recursivamente las sublistas.
+- **Uso:** facilita la organización y consulta del catálogo.
 
 ---
 
-## 🌐 4. Implementación en la Interfaz Web (`biblioteca_ui.html`)
+# 🔍 3. Algoritmos de búsqueda
 
-La interfaz web en JavaScript implementa exactamente las mismas estructuras y algoritmos en el lado del cliente:
+## 3.1. `busqueda_binaria_libro_recursiva(libros, titulo_buscar, inicio, fin)`
 
-1. **Clases JS:** `Nodo`, `Pila` y `Cola` gestionan el estado reactivo del navegador.
-2. **Cola de Reservas (FIFO):** Muestra tarjetas interactivas de usuarios en espera y botón para desencolar o procesar turnos.
-3. **Historial de Operaciones (LIFO):** Muestra la pila con badges de tiempo y detalles de cada acción reciente.
-4. **Buscador Reactivo:** Selector entre ordenamiento QuickSort (A-Z, Z-A, Categoría) y barra de búsqueda binaria recursiva en tiempo real.
-5. **Autoevaluación de Disponibilidad:** Al presionar "Prestar" en un libro con 0 ejemplares, el sistema ofrece registrar al usuario automáticamente en la cola de reservas. Al registrar una devolución, atiende automáticamente al primer reservante.
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 104
+
+Busca un libro por su título reduciendo a la mitad el espacio de búsqueda en cada llamada recursiva.
+
+**Requisito:** la lista debe estar ordenada previamente según el mismo criterio de comparación utilizado en la búsqueda.
+
+### Funcionamiento
+
+1. Calcula la posición central de la lista.
+2. Compara el título central con el título buscado.
+3. Si coincide, devuelve el libro.
+4. Si el título buscado es menor, continúa por la mitad izquierda.
+5. Si es mayor, continúa por la mitad derecha.
+6. Si el intervalo queda vacío, devuelve `None`.
+
+### Casos base
+
+- **Libro no encontrado:** si `inicio > fin`, retorna `None`.
+- **Libro encontrado:** si el título del elemento central coincide, retorna el libro.
+
+### Complejidad
+
+- **Temporal:** \(O(\log n)\) en el caso habitual de una búsqueda binaria sobre una lista ordenada.
+- **Espacial:** \(O(\log n)\) para la pila de llamadas recursivas en el caso habitual.
+
+## 3.2. `buscar_libro_catalogo(libros, titulo_buscar)`
+
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 175
+
+Integra el ordenamiento QuickSort y la búsqueda binaria en una sola operación.
+
+1. Ordena los libros utilizando QuickSort.
+2. Ejecuta la búsqueda binaria sobre el catálogo ordenado.
+3. Devuelve el libro encontrado o el resultado de búsqueda correspondiente.
+
+**Complejidad promedio:** \(O(n \log n)\) cuando se ordena todo el catálogo antes de buscar. El costo total queda dominado por el ordenamiento.
+
+## 3.3. `buscar_prestamo_recursivo(prestamos, codigo, indice)`
+
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 90
+
+Realiza una búsqueda lineal recursiva para localizar un préstamo por su código.
+
+- **Caso base:** el índice queda fuera de los límites de la lista o se encuentra el código buscado.
+- **Paso recursivo:** continúa con el siguiente elemento mediante `indice + 1`.
+- **Uso:** permite localizar el préstamo activo durante el proceso de devolución.
+
+**Complejidad temporal:** \(O(n)\) en el peor caso.
 
 ---
 
-## 📊 5. Matriz Comparativa de Estructuras y Algoritmos
+# 🔁 4. Algoritmos recursivos adicionales
 
-| Componente | Tipo | Complejidad Temporal | Aplicación Práctica en el Sistema |
+La recursividad consiste en resolver un problema mediante una función que se llama a sí misma hasta alcanzar un caso base.
+
+## 4.1. `calcular_multa_recursiva(dias_retraso, tarifa_por_semana)`
+
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 79
+
+Calcula el valor acumulado de las multas según los días de retraso, sumando la tarifa semanal mediante llamadas recursivas.
+
+### Funcionamiento
+
+- **Caso base:** si `dias_retraso <= 0`, retorna `0.0`.
+- **Paso recursivo:** suma la tarifa semanal y vuelve a llamar a la función restando siete días.
+
+La expresión conceptual es:
+
+```python
+tarifa_por_semana + calcular_multa_recursiva(
+    dias_retraso - 7,
+    tarifa_por_semana
+)
+```
+
+- **Uso:** se integra en `registrar_devolucion()` para calcular las multas durante las devoluciones.
+- **Complejidad temporal:** \(O(n/7)\), equivalente a \(O(n)\) respecto a los días de retraso.
+
+## 4.2. `contar_libros_disponibles_recursivo(libros, indice)`
+
+**Archivo:** `biblioteca.py`  
+**Línea de referencia:** 126
+
+Recorre recursivamente la lista para contar los ejemplares disponibles para préstamo.
+
+- **Caso base:** si `indice >= len(libros)`, retorna `0`.
+- **Paso recursivo:** suma `1` si el libro está disponible o `0` si está prestado, y continúa con el siguiente índice.
+- **Resultado:** devuelve la cantidad total de libros disponibles.
+
+La operación conceptual es:
+
+```python
+(1 if libro.esta_disponible() else 0) + contar_libros_disponibles_recursivo(
+    libros,
+    indice + 1
+)
+```
+
+**Complejidad temporal:** \(O(n)\), porque se evalúa cada elemento de la lista una vez.
+
+---
+
+# 🌐 5. Implementación en la interfaz web
+
+**Archivo:** `biblioteca_ui.html`  
+**Tecnología:** JavaScript ES6+  
+**Ubicación de referencia:** a partir de las líneas 1058–1080.
+
+La interfaz web incorpora versiones equivalentes de las estructuras y algoritmos para ofrecer una experiencia interactiva y actualizar la información del catálogo.
+
+## 5.1. Estructuras de datos en JavaScript
+
+Se implementan las clases equivalentes:
+
+- `Nodo`: almacena los datos y la referencia al siguiente nodo.
+- `Pila`: gestiona el historial de operaciones bajo el principio LIFO.
+- `Cola`: administra las solicitudes pendientes mediante el principio FIFO.
+
+## 5.2. `quicksortLibros(lista, criterio, asc)`
+
+Organiza dinámicamente los libros según el criterio seleccionado.
+
+- Ordenamiento por título o categoría.
+- Orden ascendente o descendente.
+- Indicador visual del algoritmo activo.
+
+## 5.3. `buscarLibroBinarioRecursivo(librosOrdenados, titulo, inicio, fin)`
+
+Realiza búsquedas mediante búsqueda binaria recursiva en el catálogo web.
+
+- Reduce progresivamente el espacio de búsqueda.
+- Se integra con la barra de búsqueda.
+- Requiere que la lista esté ordenada según el criterio utilizado.
+
+## 5.4. `calcularMultaRecursiva(dias, tarifa)`
+
+Calcula las multas por retraso mediante recursividad.
+
+- Se utiliza al renderizar las tarjetas de devolución.
+- Participa en el procesamiento de las multas durante las devoluciones.
+
+## 5.5. `contarDisponiblesRecursivo(libros, index)`
+
+Cuenta recursivamente los ejemplares disponibles.
+
+- Actualiza las métricas del catálogo.
+- Permite actualizar las insignias del encabezado mediante la función `chips()`.
+
+## 5.6. Reservas e historial interactivo
+
+La interfaz web también integra las estructuras dinámicas en sus funcionalidades:
+
+- **Cola de reservas FIFO:** muestra usuarios en espera y permite gestionar las solicitudes.
+- **Historial LIFO:** presenta las operaciones recientes mediante tarjetas e indicadores visuales.
+- **Control de disponibilidad:** si un libro no tiene ejemplares disponibles, ofrece registrar una reserva.
+- **Devoluciones:** cuando se devuelve un ejemplar, el sistema puede atender al primer usuario de la cola de espera.
+
+---
+
+# 📊 6. Matriz comparativa de estructuras y algoritmos
+
+| Componente | Tipo | Complejidad temporal | Aplicación |
 |---|---|---|---|
-| `Nodo` | Estructura Enlazada | $O(1)$ | Bloque constructor fundamental de Pilas y Colas. |
-| `Pila` (LIFO) | Estructura Lineal | $O(1)$ en Push / Pop | Historial y auditoría de transacciones recientes. |
-| `Cola` (FIFO) | Estructura Lineal | $O(1)$ en Enqueue / Dequeue | Lista de espera y reservas de libros agotados. |
-| `quicksort_libros` | Ordenamiento Recursivo | $O(n \log n)$ prom. | Ordenación del catálogo por título o categoría. |
-| `busqueda_binaria` | Búsqueda Recursiva | $O(\log n)$ | Localización ultrarrápida de títulos en el catálogo. |
-| `calcular_multa` | Recursividad Matemática | $O(n/7)$ | Cálculo acumulado de recargos por mora. |
-| `contar_disponibles`| Recorrido Recursivo | $O(n)$ | Conteo de inventario disponible en catálogo. |
+| `Nodo` | Estructura enlazada | \(O(1)\) para acceder a sus referencias | Construcción de pilas y colas |
+| `Pila` | Estructura lineal LIFO | \(O(1)\) en inserción y extracción | Historial de transacciones |
+| `Cola` | Estructura lineal FIFO | \(O(1)\) en inserción y extracción | Reservas y lista de espera |
+| QuickSort | Ordenamiento recursivo | \(O(n \log n)\) promedio | Organización del catálogo |
+| Búsqueda binaria | Búsqueda recursiva | \(O(\log n)\) | Localización de libros ordenados |
+| Búsqueda de préstamos | Búsqueda lineal recursiva | \(O(n)\) | Localización de préstamos |
+| Cálculo de multas | Recursividad | \(O(n)\) respecto a los días de retraso | Devoluciones con mora |
+| Conteo de disponibles | Recorrido recursivo | \(O(n)\) | Control del inventario |
+
+*Las complejidades corresponden a las operaciones descritas y pueden variar según los detalles de implementación.*
 
 ---
 
-## 🎯 6. Conclusión y Aprendizajes
+# 🎯 7. Conceptos de Estructura de Datos aplicados
 
-El sistema **BibliotecaVirtual** ejemplifica con rigor académico la transición desde la teoría de **Estructura de Datos** hacia una aplicación interactiva funcional:
-1. **Modularidad y Abstracción:** Las estructuras dinámicas (`Pila` y `Cola`) encapsulan sus punteros internos y exponen interfaces limpias (`apilar`, `desapilar`, `encolar`, `desencolar`).
-2. **Eficiencia Algorítmica:** La combinación de QuickSort con Búsqueda Binaria optimiza drásticamente la búsqueda de libros frente a recorridos secuenciales tradicionales.
-3. **Consistencia Dual (Python & JavaScript):** Garantiza que tanto la ejecución por consola como la experiencia visual en el navegador mantengan la misma lógica y eficiencia en estructuras de datos.
+El proyecto integra los siguientes conceptos de la asignatura:
+
+- **Estructuras enlazadas:** construcción de nodos y referencias para organizar los datos dinámicamente.
+- **Pilas (LIFO):** administración del historial de transacciones.
+- **Colas (FIFO):** gestión ordenada de reservas pendientes.
+- **Ordenamiento:** organización de libros por título y categoría mediante QuickSort.
+- **Búsqueda binaria:** localización de libros en un catálogo ordenado.
+- **Búsqueda lineal recursiva:** localización de préstamos por código.
+- **Recursividad:** cálculo de multas y conteo de ejemplares disponibles.
+- **Integración de algoritmos:** combinación de ordenamiento y búsqueda en una misma operación.
+- **Desarrollo multiplataforma:** aplicación de los conceptos tanto en Python como en JavaScript.
+
+---
+
+# ✅ 8. Conclusión y aprendizajes
+
+BibliotecaVirtual demuestra cómo los conceptos de Estructura de Datos pueden aplicarse en un sistema funcional de gestión bibliotecaria.
+
+La implementación de nodos enlazados, pilas y colas permite administrar el historial de operaciones y las reservas pendientes. Por su parte, QuickSort y la búsqueda binaria facilitan la organización y consulta del catálogo, mientras que la recursividad permite calcular multas y contar los ejemplares disponibles.
+
+La integración de estas funcionalidades en Python y JavaScript conecta la lógica del sistema con una interfaz web interactiva y permite comprender la utilidad práctica de los algoritmos estudiados.
+
+---
+
+## 👨‍🎓 Información académica
+
+**Institución:** Universidad Técnica de Machala  
+**Asignatura:** Estructura de Datos  
+**Proyecto:** BibliotecaVirtual — Sistema de Gestión de Biblioteca Digital  
+**Periodo:** Primer Hemisemestre
